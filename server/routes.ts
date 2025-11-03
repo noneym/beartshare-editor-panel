@@ -1,13 +1,18 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import multer from "multer";
 import { storage } from "./storage";
 import { sendEmail, replaceTemplateTags } from "./email";
 import { sendSMS, cleanPhoneNumber } from "./sms";
+import { uploadImageToCloudflare, uploadImageFromFile } from "./cloudflare";
 import {
   insertBlogCategorySchema,
   insertBlogPostSchema,
   insertEmailTemplateSchema,
 } from "@shared/schema";
+
+// Configure multer for file uploads
+const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users API
@@ -282,6 +287,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error sending SMS:", error);
       res.status(500).json({ error: "Failed to send SMS" });
+    }
+  });
+
+  // Cloudflare Images API - Upload from URL
+  app.post("/api/upload-image-url", async (req, res) => {
+    try {
+      const { url } = req.body;
+
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: "Image URL required" });
+      }
+
+      const result = await uploadImageToCloudflare(url);
+      
+      if (result.success && result.result) {
+        res.json({
+          success: true,
+          imageId: result.result.id,
+          variants: result.result.variants,
+        });
+      } else {
+        res.status(400).json({ error: "Upload failed", details: result.errors });
+      }
+    } catch (error) {
+      console.error("Error uploading image from URL:", error);
+      res.status(500).json({ error: "Failed to upload image" });
+    }
+  });
+
+  // Cloudflare Images API - Upload from file
+  app.post("/api/upload-image", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const result = await uploadImageFromFile(
+        req.file.buffer,
+        req.file.originalname
+      );
+      
+      if (result.success && result.result) {
+        res.json({
+          success: true,
+          imageId: result.result.id,
+          variants: result.result.variants,
+        });
+      } else {
+        res.status(400).json({ error: "Upload failed", details: result.errors });
+      }
+    } catch (error) {
+      console.error("Error uploading image file:", error);
+      res.status(500).json({ error: "Failed to upload image" });
     }
   });
 

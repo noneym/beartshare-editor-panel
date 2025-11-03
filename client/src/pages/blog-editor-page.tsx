@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BlogEditor } from "@/components/blog-editor";
+import { AdvancedBlogEditor } from "@/components/advanced-blog-editor";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { BlogCategory, BlogPost } from "@shared/schema";
@@ -163,7 +163,7 @@ export default function BlogEditorPage() {
 
         <div>
           <Label className="text-sm font-medium mb-2 block">İçerik</Label>
-          <BlogEditor
+          <AdvancedBlogEditor
             initialContent={content}
             onChange={setContent}
           />
