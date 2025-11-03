@@ -265,16 +265,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Image upload failed" });
       }
 
-      // Return the public URL in multiple formats for compatibility
-      const imageId = result.result.id;
-      const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-      const publicUrl = `https://imagedelivery.net/${accountId}/${imageId}/public`;
+      console.log("Cloudflare upload result:", JSON.stringify(result.result, null, 2));
+
+      // Use the variants from Cloudflare response, or construct URL
+      let imageUrl: string;
+      
+      if (result.result.variants && result.result.variants.length > 0) {
+        // Use the first variant from Cloudflare
+        imageUrl = result.result.variants[0];
+      } else {
+        // Fallback: construct URL (usually public variant is available)
+        const imageId = result.result.id;
+        const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+        imageUrl = `https://imagedelivery.net/${accountId}/${imageId}/public`;
+      }
 
       // Return both formats: {url} for cover photo and {success, variants} for editor
       res.json({ 
-        url: publicUrl,
+        url: imageUrl,
         success: true,
-        variants: [publicUrl]
+        variants: result.result.variants || [imageUrl]
       });
     } catch (error) {
       console.error("Error uploading image:", error);
