@@ -32,7 +32,8 @@ export default function Login() {
           title: "Başarılı",
           description: "Giriş yapıldı, yönlendiriliyorsunuz...",
         });
-        setLocation("/");
+        // Full page reload to ensure session is picked up
+        window.location.href = "/";
       } else {
         toast({
           title: "Hata",
