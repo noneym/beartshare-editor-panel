@@ -155,6 +155,7 @@ export function BlogEditor({ initialContent = "", onChange }: BlogEditorProps) {
         ref={editorRef}
         contentEditable
         onInput={handleInput}
+        dir="ltr"
         className="min-h-96 p-6 focus:outline-none prose prose-sm max-w-none"
         data-placeholder="Blog içeriğinizi buraya yazın..."
         data-testid="editor-content"
