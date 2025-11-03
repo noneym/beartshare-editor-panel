@@ -19,7 +19,28 @@ export function hashPassword(password: string): string {
 
 // Verify user credentials
 export async function verifyAdminCredentials(username: string, password: string) {
+  console.log('🔐 Login attempt for username:', username);
   const hashedPassword = hashPassword(password);
+  console.log('🔑 Password hash:', hashedPassword);
+  
+  // First, check if user exists at all
+  const [existingUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.username, username))
+    .limit(1);
+  
+  if (!existingUser) {
+    console.log('❌ User not found in database');
+    return null;
+  }
+  
+  console.log('👤 User found:', {
+    id: existingUser.id,
+    username: existingUser.username,
+    admin: existingUser.admin,
+    passwordHashMatches: existingUser.password === hashedPassword
+  });
   
   const [user] = await db
     .select()
@@ -32,6 +53,12 @@ export async function verifyAdminCredentials(username: string, password: string)
       )
     )
     .limit(1);
+
+  if (!user) {
+    console.log('❌ Authentication failed - either password mismatch or not admin');
+  } else {
+    console.log('✅ Authentication successful');
+  }
 
   return user || null;
 }
