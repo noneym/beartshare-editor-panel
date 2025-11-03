@@ -627,6 +627,7 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
             contentEditable
             onInput={handleInput}
             onClick={handleEditorClick}
+            dir="ltr"
             className="min-h-96 p-6 focus:outline-none prose prose-sm max-w-none"
             data-placeholder="Blog içeriğinizi buraya yazın..."
             data-testid="editor-content"
