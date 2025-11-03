@@ -69,7 +69,8 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
 
   // Update visual editor when switching from HTML mode back to visual mode
   useEffect(() => {
-    if (!isHtmlMode && editorRef.current && htmlContent) {
+    if (!isHtmlMode && editorRef.current && htmlContent !== editorRef.current.innerHTML) {
+      // Only update if content actually differs to avoid cursor jump
       editorRef.current.innerHTML = htmlContent;
     }
   }, [isHtmlMode, htmlContent]);
@@ -86,57 +87,10 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
 
   const handleInput = () => {
     if (editorRef.current) {
-      // Save cursor position before updating state
-      const selection = window.getSelection();
-      let cursorPosition = 0;
-      
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const preCaretRange = range.cloneRange();
-        preCaretRange.selectNodeContents(editorRef.current);
-        preCaretRange.setEnd(range.endContainer, range.endOffset);
-        cursorPosition = preCaretRange.toString().length;
-      }
-
       const html = editorRef.current.innerHTML;
       setContent(html);
       setHtmlContent(html);
       onChange?.(html);
-
-      // Restore cursor position after state update
-      requestAnimationFrame(() => {
-        if (editorRef.current && selection) {
-          try {
-            const textNodes: Node[] = [];
-            const getTextNodes = (node: Node) => {
-              if (node.nodeType === Node.TEXT_NODE) {
-                textNodes.push(node);
-              } else {
-                node.childNodes.forEach(getTextNodes);
-              }
-            };
-            getTextNodes(editorRef.current);
-
-            let charCount = 0;
-            for (const node of textNodes) {
-              const nodeLength = node.textContent?.length || 0;
-              if (charCount + nodeLength >= cursorPosition) {
-                const range = document.createRange();
-                const offset = cursorPosition - charCount;
-                range.setStart(node, Math.min(offset, nodeLength));
-                range.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(range);
-                break;
-              }
-              charCount += nodeLength;
-            }
-          } catch (error) {
-            // Silently fail if cursor restoration doesn't work
-            console.debug('Cursor restoration failed:', error);
-          }
-        }
-      });
     }
   };
 
