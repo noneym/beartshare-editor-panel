@@ -352,4 +352,11 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+
+  /* Force LTR text direction for blog editor - fixes RTL text input issue */
+  [contenteditable][dir="ltr"] {
+    direction: ltr !important;
+    unicode-bidi: bidi-override !important;
+    text-align: left !important;
+  }
 }
