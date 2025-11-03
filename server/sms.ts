@@ -39,6 +39,17 @@ export async function sendSMS(options: SendSMSOptions): Promise<string> {
   });
 
   const responseText = await response.text();
+  console.log("NetGSM Response:", responseText);
+  
+  // Parse the response to check for errors
+  try {
+    const parser = new xml2js.Parser();
+    const parsed = await parser.parseStringPromise(responseText);
+    console.log("NetGSM Parsed Response:", JSON.stringify(parsed, null, 2));
+  } catch (err) {
+    console.error("Failed to parse NetGSM response:", err);
+  }
+  
   return responseText;
 }
 
