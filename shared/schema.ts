@@ -1,4 +1,4 @@
-import { mysqlTable, varchar, text, int, timestamp, datetime } from "drizzle-orm/mysql-core";
+import { mysqlTable, varchar, text, longtext, int, timestamp, datetime } from "drizzle-orm/mysql-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -32,7 +32,7 @@ export const blogCategories = mysqlTable("blog_category", {
 export const blogPosts = mysqlTable("blog_post", {
   id: int("id").primaryKey().autoincrement(),
   title: varchar("title", { length: 500 }).notNull(),
-  content: text("content").notNull(),
+  content: longtext("content").notNull(), // Changed to longtext for large blog posts (4GB max)
   category: int("category"),
   image: varchar("image", { length: 500 }),
   user_id: int("user_id"),
@@ -46,7 +46,7 @@ export const emailTemplates = mysqlTable("email_templates", {
   id: int("id").primaryKey().autoincrement(),
   name: varchar("name", { length: 255 }).notNull(),
   subject: varchar("subject", { length: 500 }).notNull(),
-  content: text("content").notNull(),
+  content: longtext("content").notNull(), // Changed to longtext for large email templates
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
