@@ -36,7 +36,7 @@ export function EmailTemplateCard({
           <p className="text-sm text-muted-foreground mb-3" data-testid={`text-subject-${id}`}>
             Konu: {subject}
           </p>
-          <div className="text-sm text-muted-foreground line-clamp-3 bg-muted/30 p-3 rounded-lg">
+          <div className="text-sm text-muted-foreground line-clamp-3 bg-secondary/50 p-3 rounded-md border border-border">
             <div dangerouslySetInnerHTML={{ __html: preview }} />
           </div>
         </div>
