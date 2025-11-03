@@ -23,6 +23,8 @@ import {
   Redo,
   Type,
   FileCode,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -91,6 +93,18 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
     }
   };
 
+  const handleEditorClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'IMG') {
+      // Select the image when clicked
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNode(target);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+  };
+
   const handleHtmlChange = (html: string) => {
     setHtmlContent(html);
     setContent(html);
@@ -139,6 +153,56 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
     const color = prompt("Arka plan renk kodunu girin (örn: #FFFF00):");
     if (color) {
       execCommand("backColor", color);
+    }
+  };
+
+  const getSelectedImage = (): HTMLImageElement | null => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return null;
+
+    const range = selection.getRangeAt(0);
+    let element = range.startContainer as Node;
+
+    // If text node, get parent element
+    if (element.nodeType === Node.TEXT_NODE) {
+      element = element.parentNode as Node;
+    }
+
+    // Check if element or parent is an image
+    if (element.nodeName === 'IMG') {
+      return element as HTMLImageElement;
+    }
+
+    // Check if selection contains an image
+    const commonAncestor = range.commonAncestorContainer;
+    if (commonAncestor.nodeType === Node.ELEMENT_NODE) {
+      const images = (commonAncestor as Element).querySelectorAll('img');
+      if (images.length > 0) {
+        return images[0] as HTMLImageElement;
+      }
+    }
+
+    return null;
+  };
+
+  const resizeImage = (widthPercent: number) => {
+    const img = getSelectedImage();
+    if (img) {
+      img.style.width = `${widthPercent}%`;
+      img.style.height = 'auto';
+      if (editorRef.current) {
+        handleInput();
+      }
+      toast({
+        title: "Başarılı",
+        description: `Resim boyutu %${widthPercent} olarak ayarlandı.`,
+      });
+    } else {
+      toast({
+        title: "Uyarı",
+        description: "Lütfen önce bir resmi seçin veya tıklayın.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -500,6 +564,50 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
                 >
                   <Image className="w-4 h-4" />
                 </Button>
+
+                <Separator orientation="vertical" className="mx-1 h-9" />
+
+                {/* Image Resize */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 px-2 text-xs"
+                  onClick={() => resizeImage(25)}
+                  data-testid="button-resize-25"
+                  title="Resim Boyutu %25"
+                >
+                  25%
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 px-2 text-xs"
+                  onClick={() => resizeImage(50)}
+                  data-testid="button-resize-50"
+                  title="Resim Boyutu %50"
+                >
+                  50%
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 px-2 text-xs"
+                  onClick={() => resizeImage(75)}
+                  data-testid="button-resize-75"
+                  title="Resim Boyutu %75"
+                >
+                  75%
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 px-2 text-xs"
+                  onClick={() => resizeImage(100)}
+                  data-testid="button-resize-100"
+                  title="Resim Boyutu %100"
+                >
+                  100%
+                </Button>
               </>
             )}
           </div>
@@ -518,6 +626,7 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
             ref={editorRef}
             contentEditable
             onInput={handleInput}
+            onClick={handleEditorClick}
             className="min-h-96 p-6 focus:outline-none prose prose-sm max-w-none"
             data-placeholder="Blog içeriğinizi buraya yazın..."
             data-testid="editor-content"
