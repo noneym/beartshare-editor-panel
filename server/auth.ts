@@ -53,3 +53,54 @@ export function isAuthenticated(req: Request, res: Response) {
     res.json({ authenticated: false });
   }
 }
+
+// Ensure default admin user exists
+export async function ensureDefaultAdmin() {
+  console.log('🔐 Checking for default admin user...');
+  try {
+    const adminUsername = 'admin';
+    const adminPassword = 'admin123';
+    
+    console.log('🔍 Querying database for admin user...');
+    // Check if admin user exists
+    const [existingAdmin] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, adminUsername))
+      .limit(1);
+
+    if (!existingAdmin) {
+      console.log('✨ Admin user not found, creating default admin user...');
+      const hashedPassword = hashPassword(adminPassword);
+      console.log('🔑 Password hashed');
+      
+      await db.insert(users).values({
+        username: adminUsername,
+        password: hashedPassword,
+        name: 'Admin',
+        lastname: 'User',
+        email: 'admin@beartshare.com',
+        mobile: '5551234567',
+        admin: 1,
+        level: 1,
+        mail_verify: 1,
+      });
+      
+      console.log('✅ Default admin user created successfully (username: admin, password: admin123)');
+    } else {
+      console.log('👤 Admin user already exists (ID: ' + existingAdmin.id + ', admin flag: ' + existingAdmin.admin + ')');
+      if (existingAdmin.admin !== 1) {
+        // Ensure the admin user has admin privileges
+        console.log('⚠️  Updating admin privileges...');
+        await db.update(users)
+          .set({ admin: 1 })
+          .where(eq(users.id, existingAdmin.id));
+        
+        console.log('✅ Updated existing admin user privileges');
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error ensuring default admin user:', error);
+    console.error('Stack trace:', (error as Error).stack);
+  }
+}
