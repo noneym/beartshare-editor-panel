@@ -1,14 +1,20 @@
 import { Users, Mail, MessageSquare, FileText } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
 import { Card } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import type { User, BlogPost } from "@shared/schema";
 
 export default function Dashboard() {
-  const recentActivity = [
-    { id: 1, action: "E-posta gönderildi", target: "25 kullanıcıya", time: "5 dakika önce" },
-    { id: 2, action: "Yeni blog yazısı", target: "React Temelleri", time: "2 saat önce" },
-    { id: 3, action: "SMS gönderildi", target: "50 kullanıcıya", time: "3 saat önce" },
-    { id: 4, action: "Kullanıcı kaydı", target: "Ahmet Yılmaz", time: "5 saat önce" },
-  ];
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+
+  const { data: posts = [] } = useQuery<BlogPost[]>({
+    queryKey: ["/api/blog-posts"],
+  });
+
+  const activeUsers = users.filter(u => u.status === "active").length;
+  const publishedPosts = posts.filter(p => p.status === "published").length;
 
   return (
     <div className="p-6 md:p-8 space-y-8">
@@ -20,50 +26,65 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Toplam Kullanıcı"
-          value="1,234"
+          value={users.length.toString()}
           icon={Users}
-          trend="+12% bu ay"
+          trend={`${activeUsers} aktif`}
           trendPositive={true}
         />
         <StatCard
-          title="Gönderilen E-posta"
-          value="8,567"
+          title="E-posta Şablonları"
+          value="Hazır"
           icon={Mail}
-          trend="+24% bu ay"
+          trend="Toplu gönderim"
           trendPositive={true}
         />
         <StatCard
-          title="Gönderilen SMS"
-          value="4,321"
+          title="SMS Sistemi"
+          value="Aktif"
           icon={MessageSquare}
-          trend="-3% bu ay"
-          trendPositive={false}
+          trend="NetGSM entegre"
+          trendPositive={true}
         />
         <StatCard
           title="Blog Yazıları"
-          value="87"
+          value={posts.length.toString()}
           icon={FileText}
-          trend="+5 yeni"
+          trend={`${publishedPosts} yayında`}
           trendPositive={true}
         />
       </div>
 
       <Card className="p-6">
-        <h2 className="font-bold text-lg mb-4">Son Aktiviteler</h2>
+        <h2 className="font-bold text-lg mb-4">Sistem Özeti</h2>
         <div className="space-y-4">
-          {recentActivity.map((activity) => (
-            <div
-              key={activity.id}
-              className="flex items-center justify-between py-3 border-b border-border last:border-0"
-              data-testid={`activity-${activity.id}`}
-            >
-              <div>
-                <p className="font-medium text-sm">{activity.action}</p>
-                <p className="text-xs text-muted-foreground">{activity.target}</p>
-              </div>
-              <span className="text-xs text-muted-foreground">{activity.time}</span>
+          <div className="flex items-center justify-between py-3 border-b border-border">
+            <div>
+              <p className="font-medium text-sm">Kullanıcı Yönetimi</p>
+              <p className="text-xs text-muted-foreground">Kullanıcıları görüntüleyin ve yönetin</p>
             </div>
-          ))}
+            <span className="text-xs text-muted-foreground">{users.length} kullanıcı</span>
+          </div>
+          <div className="flex items-center justify-between py-3 border-b border-border">
+            <div>
+              <p className="font-medium text-sm">E-posta Gönderimi</p>
+              <p className="text-xs text-muted-foreground">Brevo SMTP ile toplu e-posta</p>
+            </div>
+            <span className="text-xs text-muted-foreground">Aktif</span>
+          </div>
+          <div className="flex items-center justify-between py-3 border-b border-border">
+            <div>
+              <p className="font-medium text-sm">SMS Gönderimi</p>
+              <p className="text-xs text-muted-foreground">NetGSM SOAP API entegrasyonu</p>
+            </div>
+            <span className="text-xs text-muted-foreground">Aktif</span>
+          </div>
+          <div className="flex items-center justify-between py-3 border-b border-border last:border-0">
+            <div>
+              <p className="font-medium text-sm">Blog Yönetimi</p>
+              <p className="text-xs text-muted-foreground">Blog yazıları ve kategoriler</p>
+            </div>
+            <span className="text-xs text-muted-foreground">{posts.length} yazı</span>
+          </div>
         </div>
       </Card>
     </div>

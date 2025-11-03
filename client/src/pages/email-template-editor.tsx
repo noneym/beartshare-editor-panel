@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save, Eye, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,10 +7,16 @@ import { BlogEditor } from "@/components/blog-editor";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmailTemplatePreview } from "@/components/email-template-preview";
-import { useLocation } from "wouter";
+import { useLocation, useParams } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { EmailTemplate } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EmailTemplateEditor() {
+  const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [showPreview, setShowPreview] = useState(false);
   const [templateData, setTemplateData] = useState({
     name: "",
@@ -18,9 +24,59 @@ export default function EmailTemplateEditor() {
     content: "",
   });
 
+  const { data: template, isLoading } = useQuery<EmailTemplate>({
+    queryKey: ["/api/email-templates", id],
+    enabled: !!id,
+  });
+
+  useEffect(() => {
+    if (template) {
+      setTemplateData({
+        name: template.name,
+        subject: template.subject,
+        content: template.content,
+      });
+    }
+  }, [template]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: { name: string; subject: string; content: string }) => {
+      if (id) {
+        const res = await apiRequest("PUT", `/api/email-templates/${id}`, data);
+        return res.json();
+      } else {
+        const res = await apiRequest("POST", "/api/email-templates", data);
+        return res.json();
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/email-templates"] });
+      toast({
+        title: "Başarılı",
+        description: id ? "Şablon güncellendi." : "Şablon oluşturuldu.",
+      });
+      setLocation("/email-templates");
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "Şablon kaydedilirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSave = () => {
-    console.log("Save template:", templateData);
-    setLocation("/email-templates");
+    if (!templateData.name || !templateData.subject || !templateData.content) {
+      toast({
+        title: "Hata",
+        description: "Tüm alanlar zorunludur.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    saveMutation.mutate(templateData);
   };
 
   const availableTags = [
@@ -49,8 +105,8 @@ export default function EmailTemplateEditor() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold mb-2">Yeni E-posta Şablonu</h1>
-            <p className="text-muted-foreground">Yeniden kullanılabilir e-posta şablonu oluşturun.</p>
+            <h1 className="text-2xl font-bold mb-2">{id ? "E-posta Şablonunu Düzenle" : "Yeni E-posta Şablonu"}</h1>
+            <p className="text-muted-foreground">{id ? "Mevcut şablonu düzenleyin." : "Yeniden kullanılabilir e-posta şablonu oluşturun."}</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -58,9 +114,9 @@ export default function EmailTemplateEditor() {
             <Eye className="w-4 h-4 mr-2" />
             Önizle
           </Button>
-          <Button onClick={handleSave} data-testid="button-save-template">
+          <Button onClick={handleSave} disabled={saveMutation.isPending} data-testid="button-save-template">
             <Save className="w-4 h-4 mr-2" />
-            Kaydet
+            {saveMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
           </Button>
         </div>
       </div>
