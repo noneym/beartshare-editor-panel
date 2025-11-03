@@ -628,7 +628,8 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
             onInput={handleInput}
             onClick={handleEditorClick}
             dir="ltr"
-            className="min-h-96 p-6 focus:outline-none prose prose-sm max-w-none"
+            style={{ direction: 'ltr', unicodeBidi: 'normal' }}
+            className="min-h-96 p-6 focus:outline-none max-w-none"
             data-placeholder="Blog içeriğinizi buraya yazın..."
             data-testid="editor-content"
           />
