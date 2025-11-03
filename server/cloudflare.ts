@@ -17,9 +17,11 @@ interface CloudflareImagesResponse {
 export async function uploadImageToCloudflare(imageUrl: string): Promise<CloudflareImagesResponse> {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const token = process.env.CLOUDFLARE_IMAGES_TOKEN;
+  const email = process.env.CLOUDFLARE_EMAIL;
+  const apiKey = process.env.CLOUDFLARE_API_KEY;
 
-  if (!accountId || !token) {
-    throw new Error('Cloudflare credentials are not configured (CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_IMAGES_TOKEN required)');
+  if (!accountId || !token || !email || !apiKey) {
+    throw new Error('Cloudflare credentials are not configured (CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_IMAGES_TOKEN, CLOUDFLARE_EMAIL, and CLOUDFLARE_API_KEY required)');
   }
 
   const formData = new FormData();
@@ -28,6 +30,8 @@ export async function uploadImageToCloudflare(imageUrl: string): Promise<Cloudfl
 
   const headers: Record<string, string> = {
     'Authorization': `Bearer ${token}`,
+    'X-Auth-Email': email,
+    'X-Auth-Key': apiKey,
     ...formData.getHeaders(),
   };
 
@@ -53,16 +57,12 @@ export async function uploadImageToCloudflare(imageUrl: string): Promise<Cloudfl
 export async function uploadImageFromFile(file: Buffer, filename: string): Promise<CloudflareImagesResponse> {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const token = process.env.CLOUDFLARE_IMAGES_TOKEN;
+  const email = process.env.CLOUDFLARE_EMAIL;
+  const apiKey = process.env.CLOUDFLARE_API_KEY;
 
-  if (!accountId || !token) {
-    throw new Error('Cloudflare credentials are not configured (CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_IMAGES_TOKEN required)');
+  if (!accountId || !token || !email || !apiKey) {
+    throw new Error('Cloudflare credentials are not configured (CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_IMAGES_TOKEN, CLOUDFLARE_EMAIL, and CLOUDFLARE_API_KEY required)');
   }
-
-  console.log('Cloudflare upload attempt:', {
-    accountId: accountId.substring(0, 8) + '...',
-    tokenLength: token.length,
-    filename
-  });
 
   const formData = new FormData();
   formData.append('file', file, filename);
@@ -70,11 +70,12 @@ export async function uploadImageFromFile(file: Buffer, filename: string): Promi
 
   const headers: Record<string, string> = {
     'Authorization': `Bearer ${token}`,
+    'X-Auth-Email': email,
+    'X-Auth-Key': apiKey,
     ...formData.getHeaders(),
   };
 
   const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`;
-  console.log('Upload URL:', url);
 
   const response = await fetch(url, {
     method: 'POST',
