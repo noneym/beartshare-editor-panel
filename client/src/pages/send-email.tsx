@@ -105,6 +105,7 @@ export default function SendEmail() {
       subject: data.subject,
       message: data.message,
       templateId: selectedTemplate ? parseInt(selectedTemplate) : undefined,
+      customText: data.message, // [metin] etiketini mesajla değiştir
     });
   };
 
@@ -116,33 +117,43 @@ export default function SendEmail() {
       </div>
 
       <Card className="p-4">
-        <div className="flex items-end gap-4">
-          <div className="flex-1">
-            <Label htmlFor="template-select" className="text-sm font-medium mb-2 block">
-              E-posta Şablonu Seç (İsteğe Bağlı)
-            </Label>
-            <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-              <SelectTrigger id="template-select" className="h-11" data-testid="select-template">
-                <SelectValue placeholder="Şablon seçin veya manuel oluşturun" />
-              </SelectTrigger>
-              <SelectContent>
-                {formattedTemplates.map((template) => (
-                  <SelectItem key={template.id} value={template.id}>
-                    {template.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="space-y-3">
+          <div className="flex items-end gap-4">
+            <div className="flex-1">
+              <Label htmlFor="template-select" className="text-sm font-medium mb-2 block">
+                E-posta Şablonu Seç (İsteğe Bağlı)
+              </Label>
+              <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                <SelectTrigger id="template-select" className="h-11" data-testid="select-template">
+                  <SelectValue placeholder="Şablon seçin veya manuel oluşturun" />
+                </SelectTrigger>
+                <SelectContent>
+                  {formattedTemplates.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedTemplate && (
+              <Button
+                variant="outline"
+                onClick={() => setShowTemplatePreview(true)}
+                data-testid="button-preview-selected-template"
+              >
+                <FileCode className="w-4 h-4 mr-2" />
+                Önizle
+              </Button>
+            )}
           </div>
           {selectedTemplate && (
-            <Button
-              variant="outline"
-              onClick={() => setShowTemplatePreview(true)}
-              data-testid="button-preview-selected-template"
-            >
-              <FileCode className="w-4 h-4 mr-2" />
-              Önizle
-            </Button>
+            <div className="p-3 rounded-lg bg-muted/30 border border-border">
+              <p className="text-xs text-muted-foreground">
+                💡 <strong>İpucu:</strong> Şablonda <code className="px-1.5 py-0.5 rounded bg-background text-foreground">[metin]</code> etiketi varsa, 
+                aşağıdaki "Mesaj" alanına yazdığınız içerik otomatik olarak o etiketi değiştirecektir.
+              </p>
+            </div>
           )}
         </div>
       </Card>
