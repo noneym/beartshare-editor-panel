@@ -154,10 +154,12 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
       });
 
       const data = await response.json();
+      console.log('Upload response:', data);
 
       if (data.success && data.variants && data.variants.length > 0) {
         // Use the public variant URL
         const imageUrl = data.variants[0];
+        console.log('Image URL to insert:', imageUrl);
         insertImageUrl(imageUrl);
         setIsImageDialogOpen(false);
         toast({
@@ -165,6 +167,7 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
           description: "Resim yüklendi.",
         });
       } else {
+        console.error('Invalid response format:', data);
         throw new Error("Upload failed");
       }
     } catch (error) {
