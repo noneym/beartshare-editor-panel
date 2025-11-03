@@ -40,11 +40,13 @@ export default function SendSMS() {
     },
   });
 
-  const formattedUsers = users.map(user => ({
-    id: user.id.toString(),
-    name: user.name,
-    phone: user.email,
-  }));
+  const formattedUsers = users
+    .filter(u => u.mobile)
+    .map(user => ({
+      id: user.id.toString(),
+      name: `${user.name} ${user.lastname || ''}`.trim(),
+      phone: user.mobile!,
+    }));
 
   const filteredUsers = formattedUsers.filter(
     (user) =>

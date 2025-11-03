@@ -20,7 +20,6 @@ export default function BlogPosts() {
 
   const { data: categories = [] } = useQuery<BlogCategory[]>({
     queryKey: ["/api/blog-categories"],
-    enabled: false,
   });
 
   const deleteMutation = useMutation({
@@ -37,11 +36,17 @@ export default function BlogPosts() {
     },
   });
 
+  const getCategoryName = (categoryId: number | null) => {
+    if (!categoryId) return "Kategorisiz";
+    const category = categories.find(c => c.id === categoryId);
+    return category?.title || "Kategorisiz";
+  };
+
   const formattedPosts = posts.map(post => ({
     id: post.id.toString(),
     title: post.title,
     excerpt: post.content.substring(0, 150).replace(/<[^>]*>/g, ''),
-    category: "Genel",
+    category: getCategoryName(post.category),
     date: post.created_at ? new Date(post.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '',
     status: (post.status || 'draft') as 'published' | 'draft',
   }));

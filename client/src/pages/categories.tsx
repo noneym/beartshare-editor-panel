@@ -9,12 +9,11 @@ export default function Categories() {
 
   const { data: categories = [], isLoading } = useQuery<(BlogCategory & { postCount?: number })[]>({
     queryKey: ["/api/blog-categories"],
-    retry: false,
   });
 
   const addMutation = useMutation({
     mutationFn: async (data: { name: string; slug: string }) => {
-      const res = await apiRequest("POST", "/api/blog-categories", data);
+      const res = await apiRequest("POST", "/api/blog-categories", { title: data.name, slug: data.slug });
       return res.json();
     },
     onSuccess: () => {
@@ -28,7 +27,7 @@ export default function Categories() {
 
   const editMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: { name: string; slug: string } }) => {
-      const res = await apiRequest("PUT", `/api/blog-categories/${id}`, data);
+      const res = await apiRequest("PUT", `/api/blog-categories/${id}`, { title: data.name, slug: data.slug });
       return res.json();
     },
     onSuccess: () => {
@@ -56,7 +55,7 @@ export default function Categories() {
 
   const formattedCategories = categories.map(cat => ({
     id: cat.id.toString(),
-    name: cat.name,
+    name: cat.title,
     slug: cat.slug,
     postCount: cat.postCount || 0,
   }));

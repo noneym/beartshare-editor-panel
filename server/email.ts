@@ -31,7 +31,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
 export function replaceTemplateTags(content: string, user: Partial<User>, customText?: string): string {
   return content
     .replace(/\[isim\]/g, user.name || "")
-    .replace(/\[soyisim\]/g, user.surname || "")
+    .replace(/\[soyisim\]/g, user.lastname || "")
     .replace(/\[email\]/g, user.email || "")
     .replace(/\[metin\]/g, customText || "");
 }

@@ -4,24 +4,40 @@ import { z } from "zod";
 
 export const users = mysqlTable("users", {
   id: int("id").primaryKey().autoincrement(),
-  name: varchar("name", { length: 255 }).notNull(),
+  username: varchar("username", { length: 255 }),
+  password: varchar("password", { length: 255 }),
+  remember_token: varchar("remember_token", { length: 255 }),
+  level: int("level"),
   email: varchar("email", { length: 255 }).notNull(),
-  status: varchar("status", { length: 50 }).default("active"),
+  mobile: varchar("mobile", { length: 50 }),
+  name: varchar("name", { length: 255 }).notNull(),
+  lastname: varchar("lastname", { length: 255 }),
+  tcno: varchar("tcno", { length: 50 }),
+  birth_date: varchar("birth_date", { length: 50 }),
+  admin: int("admin"),
+  ref_code: varchar("ref_code", { length: 255 }),
+  mail_verify: int("mail_verify"),
   created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 export const blogCategories = mysqlTable("blog_category", {
   id: int("id").primaryKey().autoincrement(),
-  name: varchar("name", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 export const blogPosts = mysqlTable("blog_post", {
   id: int("id").primaryKey().autoincrement(),
   title: varchar("title", { length: 500 }).notNull(),
   content: text("content").notNull(),
+  category: int("category"),
+  image: varchar("image", { length: 500 }),
+  user_id: int("user_id"),
   status: varchar("status", { length: 50 }).default("draft"),
+  slug: varchar("slug", { length: 500 }),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
@@ -44,6 +60,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const insertBlogCategorySchema = createInsertSchema(blogCategories).omit({
   id: true,
   created_at: true,
+  updated_at: true,
 });
 
 export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
