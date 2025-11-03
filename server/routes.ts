@@ -181,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/blog-posts", async (req, res) => {
+  app.post("/api/blog-posts", requireAuth, async (req, res) => {
     try {
       const validated = insertBlogPostSchema.parse(req.body);
       
@@ -199,6 +199,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Set user_id from session
+      validated.user_id = req.session.userId;
+      
       const post = await storage.createBlogPost(validated);
       res.json(post);
     } catch (error) {
@@ -207,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/blog-posts/:id", async (req, res) => {
+  app.put("/api/blog-posts/:id", requireAuth, async (req, res) => {
     try {
       const validated = insertBlogPostSchema.partial().parse(req.body);
       
@@ -224,6 +227,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           validated.status = '0';
         }
       }
+      
+      // Don't update user_id on edit (keep original creator)
+      // Updated_at will be set automatically by storage layer
       
       const post = await storage.updateBlogPost(parseInt(req.params.id), validated);
       if (!post) {
