@@ -45,13 +45,12 @@ export default function BlogEditorPage() {
       setCategoryId(post.category?.toString() || "");
       setContent(post.content);
       
-      // Convert database status (0/1) to dropdown format (draft/published)
-      if (post.status === "1" || post.status === 1 || post.status === "published" || post.status === "Yayında") {
+      // Convert database status (0/1/string) to dropdown format (draft/published)
+      const statusStr = String(post.status || "0");
+      if (statusStr === "1" || statusStr === "published" || statusStr === "Yayında") {
         setStatus("published");
-      } else if (post.status === "0" || post.status === 0 || post.status === "draft" || post.status === "Taslak") {
-        setStatus("draft");
       } else {
-        setStatus("draft"); // Default fallback
+        setStatus("draft");
       }
       
       setImageUrl(post.image || "");

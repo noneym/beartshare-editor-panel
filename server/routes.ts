@@ -15,6 +15,17 @@ import {
 // Configure multer for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Helper function to format date as MySQL datetime string (YYYY-MM-DD HH:mm:ss)
+function formatMySQLDateTime(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 // Turkish-friendly slug generator
 function generateSlug(text: string): string {
   return text
@@ -202,6 +213,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set user_id from session
       validated.user_id = req.session.userId;
       
+      // Set created_at and updated_at timestamps in MySQL datetime format
+      const now = formatMySQLDateTime();
+      validated.created_at = now;
+      validated.updated_at = now;
+      
       const post = await storage.createBlogPost(validated);
       res.json(post);
     } catch (error) {
@@ -229,7 +245,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Don't update user_id on edit (keep original creator)
-      // Updated_at will be set automatically by storage layer
+      // Set updated_at timestamp in MySQL datetime format
+      validated.updated_at = formatMySQLDateTime();
       
       const post = await storage.updateBlogPost(parseInt(req.params.id), validated);
       if (!post) {
@@ -319,6 +336,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/email-templates", async (req, res) => {
     try {
       const validated = insertEmailTemplateSchema.parse(req.body);
+      
+      // Set created_at and updated_at timestamps in MySQL datetime format
+      const now = formatMySQLDateTime();
+      validated.created_at = now;
+      validated.updated_at = now;
+      
       const template = await storage.createEmailTemplate(validated);
       res.json(template);
     } catch (error) {
@@ -330,6 +353,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/email-templates/:id", async (req, res) => {
     try {
       const validated = insertEmailTemplateSchema.partial().parse(req.body);
+      
+      // Set updated_at timestamp in MySQL datetime format
+      validated.updated_at = formatMySQLDateTime();
+      
       const template = await storage.updateEmailTemplate(parseInt(req.params.id), validated);
       if (!template) {
         return res.status(404).json({ error: "Template not found" });

@@ -140,7 +140,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined> {
-    await db.update(emailTemplates).set({ ...template, updated_at: new Date() }).where(eq(emailTemplates.id, id));
+    // updated_at is set in routes.ts before calling this method
+    await db.update(emailTemplates).set(template).where(eq(emailTemplates.id, id));
     return await this.getEmailTemplate(id);
   }
 

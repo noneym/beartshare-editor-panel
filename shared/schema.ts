@@ -17,16 +17,16 @@ export const users = mysqlTable("users", {
   admin: int("admin"),
   ref_code: varchar("ref_code", { length: 255 }),
   mail_verify: int("mail_verify"),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
+  created_at: varchar("created_at", { length: 50 }), // Database stores as varchar datetime
+  updated_at: varchar("updated_at", { length: 50 }), // Database stores as varchar datetime
 });
 
 export const blogCategories = mysqlTable("blog_category", {
   id: int("id").primaryKey().autoincrement(),
   title: varchar("title", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
+  created_at: varchar("created_at", { length: 50 }), // Database stores as varchar datetime
+  updated_at: varchar("updated_at", { length: 50 }), // Database stores as varchar datetime
 });
 
 export const blogPosts = mysqlTable("blog_post", {
@@ -38,8 +38,8 @@ export const blogPosts = mysqlTable("blog_post", {
   user_id: int("user_id"),
   status: varchar("status", { length: 50 }).default("draft"),
   slug: varchar("slug", { length: 500 }),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
+  created_at: varchar("created_at", { length: 50 }), // Database stores as varchar datetime: 2025-08-16 18:06:44
+  updated_at: varchar("updated_at", { length: 50 }), // Database stores as varchar datetime: 2025-08-16 18:06:44
 });
 
 export const emailTemplates = mysqlTable("email_templates", {
@@ -47,8 +47,8 @@ export const emailTemplates = mysqlTable("email_templates", {
   name: varchar("name", { length: 255 }).notNull(),
   subject: varchar("subject", { length: 500 }).notNull(),
   content: longtext("content").notNull(), // Changed to longtext for large email templates
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
+  created_at: varchar("created_at", { length: 50 }), // Database stores as varchar datetime
+  updated_at: varchar("updated_at", { length: 50 }), // Database stores as varchar datetime
 });
 
 // Insert schemas
@@ -59,20 +59,17 @@ export const insertUserSchema = createInsertSchema(users).omit({
 
 export const insertBlogCategorySchema = createInsertSchema(blogCategories).omit({
   id: true,
-  created_at: true,
-  updated_at: true,
+  // Don't omit created_at and updated_at - backend sets them explicitly
 });
 
 export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
   id: true,
-  created_at: true,
-  updated_at: true,
+  // Don't omit created_at and updated_at - backend sets them explicitly
 });
 
 export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({
   id: true,
-  created_at: true,
-  updated_at: true,
+  // Don't omit created_at and updated_at - backend sets them explicitly
 });
 
 // Types
