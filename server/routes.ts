@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { sendEmail, replaceTemplateTags } from "./email";
 import { sendSMS, cleanPhoneNumber } from "./sms";
 import { uploadImageToCloudflare, uploadImageFromFile } from "./cloudflare";
+import { verifyAdminCredentials, requireAuth, isAuthenticated } from "./auth";
 import {
   insertBlogCategorySchema,
   insertBlogPostSchema,
@@ -15,6 +16,51 @@ import {
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication API
+  app.post("/api/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+
+      if (!username || !password) {
+        return res.status(400).json({ error: "Username and password required" });
+      }
+
+      const user = await verifyAdminCredentials(username, password);
+
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials or not an admin" });
+      }
+
+      // Set session
+      req.session.userId = user.id;
+      req.session.isAdmin = true;
+
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          email: user.email,
+        },
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  app.post("/api/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Logout failed" });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  app.get("/api/auth-check", isAuthenticated);
+
   // Users API
   app.get("/api/users", async (req, res) => {
     try {
