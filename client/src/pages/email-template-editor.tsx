@@ -212,6 +212,7 @@ export default function EmailTemplateEditor() {
               />
             ) : (
               <BlogEditor
+                key={`editor-${isHtmlMode}-${templateData.content.length}`}
                 initialContent={templateData.content}
                 onChange={(content) => setTemplateData({ ...templateData, content })}
               />

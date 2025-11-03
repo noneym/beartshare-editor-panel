@@ -14,7 +14,7 @@ export function BlogEditor({ initialContent = "", onChange }: BlogEditorProps) {
   const [content, setContent] = useState(initialContent);
 
   useEffect(() => {
-    if (editorRef.current && initialContent && !content) {
+    if (editorRef.current && initialContent !== undefined) {
       editorRef.current.innerHTML = initialContent;
       setContent(initialContent);
     }

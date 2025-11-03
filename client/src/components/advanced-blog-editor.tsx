@@ -65,6 +65,13 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
     }
   }, [initialContent]);
 
+  // Update visual editor when switching from HTML mode back to visual mode
+  useEffect(() => {
+    if (!isHtmlMode && editorRef.current && htmlContent) {
+      editorRef.current.innerHTML = htmlContent;
+    }
+  }, [isHtmlMode, htmlContent]);
+
   const execCommand = (command: string, value?: string) => {
     document.execCommand(command, false, value);
     if (editorRef.current) {
