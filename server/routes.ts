@@ -199,6 +199,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Image Upload API
+  app.post("/api/upload-image", requireAuth, upload.single("image"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const result = await uploadImageFromFile(req.file.buffer, req.file.originalname);
+
+      if (!result.success || !result.result) {
+        return res.status(500).json({ error: "Image upload failed" });
+      }
+
+      // Return the public URL
+      const imageId = result.result.id;
+      const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+      const publicUrl = `https://imagedelivery.net/${accountId}/${imageId}/public`;
+
+      res.json({ url: publicUrl });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      res.status(500).json({ error: "Failed to upload image" });
+    }
+  });
+
   // Email Templates API
   app.get("/api/email-templates", async (req, res) => {
     try {

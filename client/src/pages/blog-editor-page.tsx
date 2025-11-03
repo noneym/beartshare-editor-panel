@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Save, Eye } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Save, Eye, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,11 +21,14 @@ export default function BlogEditorPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState("");
   const [categoryId, setCategoryId] = useState<string>("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<string>("draft");
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: categories = [] } = useQuery<BlogCategory[]>({
     queryKey: ["/api/blog-categories"],
@@ -42,11 +45,12 @@ export default function BlogEditorPage() {
       setCategoryId(post.category?.toString() || "");
       setContent(post.content);
       setStatus(post.status || "draft");
+      setImageUrl(post.image || "");
     }
   }, [post]);
 
   const saveMutation = useMutation({
-    mutationFn: async (data: { title: string; content: string; category?: number; status: string }) => {
+    mutationFn: async (data: { title: string; content: string; category?: number; status: string; image?: string }) => {
       if (id) {
         const res = await apiRequest("PUT", `/api/blog-posts/${id}`, data);
         return res.json();
@@ -72,6 +76,58 @@ export default function BlogEditorPage() {
     },
   });
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Hata",
+        description: "Dosya boyutu çok büyük (max 10MB)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await res.json();
+      setImageUrl(data.url);
+
+      toast({
+        title: "Başarılı",
+        description: "Cover fotoğrafı yüklendi",
+      });
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast({
+        title: "Hata",
+        description: "Resim yüklenirken bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   const handleSave = () => {
     if (!title || !content) {
       toast({
@@ -87,6 +143,7 @@ export default function BlogEditorPage() {
       content,
       category: categoryId ? parseInt(categoryId) : undefined,
       status,
+      image: imageUrl || undefined,
     });
   };
 
@@ -159,6 +216,55 @@ export default function BlogEditorPage() {
               <SelectItem value="published">Yayında</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div>
+          <Label className="text-sm font-medium mb-2 block">
+            Cover Fotoğrafı
+          </Label>
+          <div className="space-y-3">
+            {imageUrl && (
+              <div className="relative inline-block">
+                <img
+                  src={imageUrl}
+                  alt="Cover"
+                  className="w-full max-w-md h-48 object-cover rounded-lg border border-border"
+                  data-testid="img-cover-preview"
+                />
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2"
+                  onClick={() => setImageUrl("")}
+                  data-testid="button-remove-cover"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                data-testid="input-cover-file"
+              />
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                data-testid="button-upload-cover"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {isUploading ? "Yükleniyor..." : imageUrl ? "Fotoğrafı Değiştir" : "Fotoğraf Yükle"}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                JPG, PNG veya WebP (max 10MB)
+              </p>
+            </div>
+          </div>
         </div>
 
         <div>
