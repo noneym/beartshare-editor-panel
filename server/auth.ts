@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { type Request, type Response, type NextFunction } from 'express';
 import { db } from './db';
 import { users } from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 
 // Extend Express Session type
 declare module 'express-session' {
@@ -17,48 +17,25 @@ export function hashPassword(password: string): string {
   return crypto.createHash('sha1').update(password).digest('hex');
 }
 
-// Verify user credentials
-export async function verifyAdminCredentials(username: string, password: string) {
-  console.log('🔐 Login attempt for username:', username);
+// Verify user credentials (supports both username and email)
+export async function verifyAdminCredentials(usernameOrEmail: string, password: string) {
   const hashedPassword = hashPassword(password);
-  console.log('🔑 Password hash:', hashedPassword);
   
-  // First, check if user exists at all
-  const [existingUser] = await db
-    .select()
-    .from(users)
-    .where(eq(users.username, username))
-    .limit(1);
-  
-  if (!existingUser) {
-    console.log('❌ User not found in database');
-    return null;
-  }
-  
-  console.log('👤 User found:', {
-    id: existingUser.id,
-    username: existingUser.username,
-    admin: existingUser.admin,
-    passwordHashMatches: existingUser.password === hashedPassword
-  });
-  
+  // Try to find user by username or email, with correct password and admin status
   const [user] = await db
     .select()
     .from(users)
     .where(
       and(
-        eq(users.username, username),
+        or(
+          eq(users.username, usernameOrEmail),
+          eq(users.email, usernameOrEmail)
+        ),
         eq(users.password, hashedPassword),
         eq(users.admin, 1)
       )
     )
     .limit(1);
-
-  if (!user) {
-    console.log('❌ Authentication failed - either password mismatch or not admin');
-  } else {
-    console.log('✅ Authentication successful');
-  }
 
   return user || null;
 }
