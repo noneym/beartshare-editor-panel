@@ -183,20 +183,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/blog-posts", requireAuth, async (req, res) => {
     try {
+      // Normalize status BEFORE validation (frontend sends number, backend expects string)
+      if (req.body.status !== undefined) {
+        if (req.body.status === 1 || req.body.status === '1' || req.body.status === 'published' || req.body.status === 'Yayında') {
+          req.body.status = '1';
+        } else if (req.body.status === 0 || req.body.status === '0' || req.body.status === 'draft' || req.body.status === 'Taslak') {
+          req.body.status = '0';
+        }
+      }
+      
       const validated = insertBlogPostSchema.parse(req.body);
       
       // Generate slug from title if not provided
       if (!validated.slug && validated.title) {
         validated.slug = generateSlug(validated.title);
-      }
-      
-      // Map status string to integer (if status is provided as string)
-      if (validated.status) {
-        if (validated.status === 'published' || validated.status === 'Yayında') {
-          validated.status = '1';
-        } else if (validated.status === 'draft' || validated.status === 'Taslak') {
-          validated.status = '0';
-        }
       }
       
       // Set user_id from session
@@ -212,20 +212,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/blog-posts/:id", requireAuth, async (req, res) => {
     try {
+      // Normalize status BEFORE validation (frontend sends number, backend expects string)
+      if (req.body.status !== undefined) {
+        if (req.body.status === 1 || req.body.status === '1' || req.body.status === 'published' || req.body.status === 'Yayında') {
+          req.body.status = '1';
+        } else if (req.body.status === 0 || req.body.status === '0' || req.body.status === 'draft' || req.body.status === 'Taslak') {
+          req.body.status = '0';
+        }
+      }
+      
       const validated = insertBlogPostSchema.partial().parse(req.body);
       
       // Regenerate slug from title if title is being updated
       if (validated.title && !validated.slug) {
         validated.slug = generateSlug(validated.title);
-      }
-      
-      // Map status string to integer (if status is provided as string)
-      if (validated.status) {
-        if (validated.status === 'published' || validated.status === 'Yayında') {
-          validated.status = '1';
-        } else if (validated.status === 'draft' || validated.status === 'Taslak') {
-          validated.status = '0';
-        }
       }
       
       // Don't update user_id on edit (keep original creator)
