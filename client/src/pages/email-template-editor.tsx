@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { Save, Eye, ArrowLeft, Code, Type } from "lucide-react";
+import { Save, Eye, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { BlogEditor } from "@/components/blog-editor";
+import { AdvancedBlogEditor } from "@/components/advanced-blog-editor";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmailTemplatePreview } from "@/components/email-template-preview";
@@ -19,7 +18,6 @@ export default function EmailTemplateEditor() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [showPreview, setShowPreview] = useState(false);
-  const [isHtmlMode, setIsHtmlMode] = useState(false);
   const [templateData, setTemplateData] = useState({
     name: "",
     subject: "",
@@ -178,45 +176,14 @@ export default function EmailTemplateEditor() {
               </Card>
             </div>
 
-            <div className="flex items-center justify-between mb-2">
+            <div className="mb-2">
               <Label className="text-sm font-medium">Şablon İçeriği</Label>
-              <div className="flex gap-2">
-                <Button
-                  variant={!isHtmlMode ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setIsHtmlMode(false)}
-                  data-testid="button-wysiwyg-mode"
-                >
-                  <Type className="w-4 h-4 mr-2" />
-                  Görsel Editör
-                </Button>
-                <Button
-                  variant={isHtmlMode ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setIsHtmlMode(true)}
-                  data-testid="button-html-mode"
-                >
-                  <Code className="w-4 h-4 mr-2" />
-                  Ham HTML
-                </Button>
-              </div>
             </div>
 
-            {isHtmlMode ? (
-              <Textarea
-                value={templateData.content}
-                onChange={(e) => setTemplateData({ ...templateData, content: e.target.value })}
-                placeholder="HTML içeriğini buraya girin..."
-                className="min-h-[400px] font-mono text-sm"
-                data-testid="textarea-html-content"
-              />
-            ) : (
-              <BlogEditor
-                key={`editor-${isHtmlMode}-${templateData.content.length}`}
-                initialContent={templateData.content}
-                onChange={(content) => setTemplateData({ ...templateData, content })}
-              />
-            )}
+            <AdvancedBlogEditor
+              initialContent={templateData.content}
+              onChange={(content) => setTemplateData({ ...templateData, content })}
+            />
           </div>
         </div>
       </Card>
