@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BlogEditor } from "./blog-editor";
+import { AdvancedBlogEditor } from "./advanced-blog-editor";
 
 interface MessageComposerProps {
   type: "email" | "sms";
@@ -82,7 +82,7 @@ export function MessageComposer({ type, recipients, onSend, onRemoveRecipient, i
             Mesaj
           </Label>
           {type === "email" ? (
-            <BlogEditor
+            <AdvancedBlogEditor
               initialContent={message}
               onChange={setMessage}
             />
