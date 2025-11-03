@@ -83,9 +83,17 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["var(--font-sans)"],
+        sans: ["Inter", "system-ui", "sans-serif"],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
+      },
+      fontSize: {
+        'xs': ['0.75rem', { lineHeight: '1.5' }],
+        'sm': ['0.875rem', { lineHeight: '1.5' }],
+        'base': ['0.875rem', { lineHeight: '1.5' }],
+        'lg': ['1.25rem', { lineHeight: '1.2' }],
+        'xl': ['1.5rem', { lineHeight: '1.2' }],
+        '2xl': ['2rem', { lineHeight: '1.2' }],
       },
       keyframes: {
         "accordion-down": {

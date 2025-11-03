@@ -1,0 +1,113 @@
+import { useState } from "react";
+import { Send, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+interface MessageComposerProps {
+  type: "email" | "sms";
+  recipients: Array<{ id: string; name: string; email?: string; phone?: string }>;
+  onSend?: (data: { subject?: string; message: string }) => void;
+  onRemoveRecipient?: (id: string) => void;
+}
+
+export function MessageComposer({ type, recipients, onSend, onRemoveRecipient }: MessageComposerProps) {
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handleSend = () => {
+    const data = type === "email" ? { subject, message } : { message };
+    onSend?.(data);
+    console.log(`Sending ${type}:`, data);
+  };
+
+  const maxLength = type === "sms" ? 160 : undefined;
+
+  return (
+    <Card className="p-6">
+      <div className="space-y-6">
+        <div>
+          <Label className="text-sm font-medium mb-2 block">
+            Alıcılar ({recipients.length})
+          </Label>
+          <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-muted/50 min-h-[60px]">
+            {recipients.map((recipient) => (
+              <Badge
+                key={recipient.id}
+                variant="secondary"
+                className="px-3 py-1.5 gap-2"
+                data-testid={`badge-recipient-${recipient.id}`}
+              >
+                <span>{recipient.name}</span>
+                {onRemoveRecipient && (
+                  <button
+                    onClick={() => onRemoveRecipient(recipient.id)}
+                    className="hover-elevate rounded-full"
+                    data-testid={`button-remove-recipient-${recipient.id}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </Badge>
+            ))}
+            {recipients.length === 0 && (
+              <span className="text-sm text-muted-foreground">Alıcı seçilmedi</span>
+            )}
+          </div>
+        </div>
+
+        {type === "email" && (
+          <div>
+            <Label htmlFor="subject" className="text-sm font-medium mb-2 block">
+              Konu
+            </Label>
+            <Input
+              id="subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="E-posta konusu"
+              className="h-11"
+              data-testid="input-subject"
+            />
+          </div>
+        )}
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <Label htmlFor="message" className="text-sm font-medium">
+              Mesaj
+            </Label>
+            {maxLength && (
+              <span className="text-xs text-muted-foreground">
+                {message.length}/{maxLength}
+              </span>
+            )}
+          </div>
+          <Textarea
+            id="message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder={type === "email" ? "E-posta içeriğinizi yazın..." : "SMS mesajınızı yazın..."}
+            className="min-h-48 resize-none"
+            maxLength={maxLength}
+            data-testid="input-message"
+          />
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            onClick={handleSend}
+            disabled={!message || recipients.length === 0}
+            data-testid="button-send"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            {type === "email" ? "E-posta Gönder" : "SMS Gönder"}
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
