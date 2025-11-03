@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-interface User {
+interface FormattedUser {
   id: string;
   name: string;
   email: string;
@@ -27,7 +27,7 @@ interface User {
 }
 
 interface UsersTableProps {
-  users: User[];
+  users: FormattedUser[];
   onSendEmail?: (userIds: string[]) => void;
   onSendSMS?: (userIds: string[]) => void;
 }

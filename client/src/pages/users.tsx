@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { UsersTable } from "@/components/users-table";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
+import * as XLSX from "xlsx";
 
 export default function Users() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -14,10 +16,10 @@ export default function Users() {
 
   const formattedUsers = users.map(user => ({
     id: user.id.toString(),
-    name: `${user.name} ${user.surname || ''}`.trim(),
+    name: `${user.name} ${user.lastname || ''}`.trim(),
     email: user.email,
-    phone: user.phone || "",
-    status: (user.status as "active" | "inactive") || "active",
+    phone: user.mobile || "",
+    status: (user.admin === 1 ? "active" : "active") as "active" | "inactive",
   }));
 
   const filteredUsers = formattedUsers.filter(
@@ -26,6 +28,32 @@ export default function Users() {
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.phone.includes(searchQuery)
   );
+
+  const handleExportExcel = () => {
+    const exportData = users.map((user) => ({
+      "ID": user.id,
+      "Kullanıcı Adı": user.username || "",
+      "Ad": user.name,
+      "Soyad": user.lastname || "",
+      "E-posta": user.email,
+      "Telefon": user.mobile || "",
+      "TC No": user.tcno || "",
+      "Doğum Tarihi": user.birth_date || "",
+      "Ref Code": user.ref_code || "",
+      "Level": user.level || 0,
+      "Admin": user.admin === 1 ? "Evet" : "Hayır",
+      "Mail Doğrulama": user.mail_verify === 1 ? "Doğrulandı" : "Bekliyor",
+      "Kayıt Tarihi": user.created_at || "",
+      "Güncellenme": user.updated_at || "",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Kullanıcılar");
+
+    const fileName = `kullanicilar-${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
 
   return (
     <div className="p-6 md:p-8 space-y-6">
@@ -45,6 +73,14 @@ export default function Users() {
             data-testid="input-search-users"
           />
         </div>
+        <Button
+          onClick={handleExportExcel}
+          variant="outline"
+          data-testid="button-export-excel"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Excel'e Aktar
+        </Button>
       </div>
 
       {isLoading ? (
