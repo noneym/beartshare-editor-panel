@@ -8,6 +8,15 @@ The platform is designed as an information-dense Material Design admin interface
 
 ## Recent Updates (November 3, 2025)
 
+**Authentication System (NEW):**
+- Implemented admin-only authentication system with session management
+- SHA1 password hashing for existing database compatibility
+- Login supports both username and email fields
+- Session-based authentication using express-session
+- All routes protected except /login page
+- Logout functionality with session destruction
+- Admin user requirement: users.admin = 1
+
 **Database Schema Alignment:**
 - Synchronized all schemas with actual MariaDB database structure
 - Fixed field naming: `users.mobile` (not phone), `users.lastname` (not surname), `blog_category.title` (not name)
@@ -20,6 +29,7 @@ The platform is designed as an information-dense Material Design admin interface
 - Fixed SMS sending to use correct `mobile` field from users table
 
 **Routes Updated:**
+- `/login` - Login page (public route)
 - `/blog-posts/new` - Create new blog post
 - `/blog-editor/:id` - Edit existing blog post (was incorrectly `/blog/edit/:id`)
 
