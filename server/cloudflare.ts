@@ -58,6 +58,12 @@ export async function uploadImageFromFile(file: Buffer, filename: string): Promi
     throw new Error('Cloudflare credentials are not configured (CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_IMAGES_TOKEN required)');
   }
 
+  console.log('Cloudflare upload attempt:', {
+    accountId: accountId.substring(0, 8) + '...',
+    tokenLength: token.length,
+    filename
+  });
+
   const formData = new FormData();
   formData.append('file', file, filename);
   formData.append('requireSignedURLs', 'false');
@@ -67,19 +73,20 @@ export async function uploadImageFromFile(file: Buffer, filename: string): Promi
     ...formData.getHeaders(),
   };
 
-  const response = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`,
-    {
-      method: 'POST',
-      headers,
-      body: formData,
-    }
-  );
+  const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/images/v1`;
+  console.log('Upload URL:', url);
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
 
   const result = await response.json() as CloudflareImagesResponse;
   
   if (!result.success) {
     console.error('Cloudflare Images upload failed:', result.errors);
+    console.error('Response status:', response.status);
     throw new Error(`Cloudflare upload failed: ${JSON.stringify(result.errors)}`);
   }
 
