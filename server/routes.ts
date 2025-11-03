@@ -15,6 +15,23 @@ import {
 // Configure multer for file uploads
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Turkish-friendly slug generator
+function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/ç/g, 'c')
+    .replace(/ğ/g, 'g')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ş/g, 's')
+    .replace(/ü/g, 'u')
+    .replace(/İ/g, 'i')
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+    .trim()
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/-+/g, '-'); // Replace multiple - with single -
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication API
   app.post("/api/login", async (req, res) => {
@@ -167,6 +184,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/blog-posts", async (req, res) => {
     try {
       const validated = insertBlogPostSchema.parse(req.body);
+      
+      // Generate slug from title if not provided
+      if (!validated.slug && validated.title) {
+        validated.slug = generateSlug(validated.title);
+      }
+      
+      // Map status string to integer (if status is provided as string)
+      if (validated.status) {
+        if (validated.status === 'published' || validated.status === 'Yayında') {
+          validated.status = '1';
+        } else if (validated.status === 'draft' || validated.status === 'Taslak') {
+          validated.status = '0';
+        }
+      }
+      
       const post = await storage.createBlogPost(validated);
       res.json(post);
     } catch (error) {
@@ -178,6 +210,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/blog-posts/:id", async (req, res) => {
     try {
       const validated = insertBlogPostSchema.partial().parse(req.body);
+      
+      // Regenerate slug from title if title is being updated
+      if (validated.title && !validated.slug) {
+        validated.slug = generateSlug(validated.title);
+      }
+      
+      // Map status string to integer (if status is provided as string)
+      if (validated.status) {
+        if (validated.status === 'published' || validated.status === 'Yayında') {
+          validated.status = '1';
+        } else if (validated.status === 'draft' || validated.status === 'Taslak') {
+          validated.status = '0';
+        }
+      }
+      
       const post = await storage.updateBlogPost(parseInt(req.params.id), validated);
       if (!post) {
         return res.status(404).json({ error: "Post not found" });
