@@ -183,8 +183,43 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
   };
 
   const insertImageUrl = (url: string) => {
-    if (url) {
-      execCommand("insertImage", url);
+    if (url && editorRef.current) {
+      // Focus editor first
+      editorRef.current.focus();
+      
+      const selection = window.getSelection();
+      let range: Range;
+      
+      if (selection && selection.rangeCount > 0) {
+        range = selection.getRangeAt(0);
+      } else {
+        // Create new range at end of editor if no selection
+        range = document.createRange();
+        range.selectNodeContents(editorRef.current);
+        range.collapse(false);
+      }
+      
+      const img = document.createElement('img');
+      img.src = url;
+      img.style.maxWidth = '100%';
+      img.style.height = 'auto';
+      
+      range.deleteContents();
+      range.insertNode(img);
+      
+      // Add a space after image for better UX
+      const space = document.createTextNode('\u00A0');
+      range.setStartAfter(img);
+      range.insertNode(space);
+      
+      // Move cursor after space
+      range.setStartAfter(space);
+      range.setEndAfter(space);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      
+      // Trigger input event to update content
+      editorRef.current.dispatchEvent(new Event('input', { bubbles: true }));
     }
   };
 
