@@ -14,7 +14,19 @@ RUN npm ci
 COPY . .
 
 # Build the application (client + server)
-RUN npm run build
+# Build client with vite
+RUN npx vite build
+
+# Build server with esbuild, excluding vite files
+RUN npx esbuild server/index.ts \
+  --platform=node \
+  --packages=external \
+  --bundle \
+  --format=esm \
+  --outdir=dist \
+  --external:./vite.js \
+  --external:./server/vite.ts \
+  --external:../vite.config.ts
 
 # Production stage
 FROM node:20-alpine
@@ -33,6 +45,10 @@ COPY --from=builder /app/dist ./dist
 
 # Copy shared schema (needed at runtime)
 COPY --from=builder /app/shared ./shared
+
+# Copy server helper files (needed at runtime in production)
+COPY --from=builder /app/server/static.ts ./server/static.ts
+COPY --from=builder /app/server/logger.ts ./server/logger.ts
 
 # Set environment to production
 ENV NODE_ENV=production

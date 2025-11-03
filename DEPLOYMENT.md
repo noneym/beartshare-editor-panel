@@ -52,11 +52,12 @@ CLOUDFLARE_API_KEY=your-api-key
 docker build -t beartshare-admin:latest .
 ```
 
-Build süreci:
-- Node.js bağımlılıkları yüklenir
-- Frontend (Vite) build edilir
-- Backend (Express) bundle edilir
-- Production image hazırlanır
+Build süreci (yaklaşık 2-3 dakika):
+- Node.js bağımlılıkları yüklenir (npm ci)
+- Frontend (Vite) build edilir → dist/public/
+- Backend (Express) bundle edilir → dist/index.js
+- Vite dosyaları production'dan hariç tutulur (sadece dev dependency)
+- Production image hazırlanır (Node.js Alpine)
 
 ### 3. Container Çalıştırma
 
