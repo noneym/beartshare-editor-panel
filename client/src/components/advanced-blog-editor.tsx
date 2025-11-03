@@ -171,7 +171,7 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
       console.error("Error uploading image:", error);
       toast({
         title: "Hata",
-        description: "Resim yüklenirken bir hata oluştu.",
+        description: "Resim yüklenirken bir hata oluştu. Lütfen Cloudflare API bilgilerinin doğru girildiğinden emin olun.",
         variant: "destructive",
       });
     } finally {
