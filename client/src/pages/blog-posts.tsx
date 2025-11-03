@@ -64,7 +64,7 @@ export default function BlogPosts() {
           <h1 className="text-2xl font-bold mb-2">Blog Yazıları</h1>
           <p className="text-muted-foreground">Blog yazılarınızı oluşturun ve yönetin.</p>
         </div>
-        <Button onClick={() => setLocation("/blog/new")} data-testid="button-new-post">
+        <Button onClick={() => setLocation("/blog-posts/new")} data-testid="button-new-post">
           <Plus className="w-4 h-4 mr-2" />
           Yeni Yazı
         </Button>
@@ -91,7 +91,7 @@ export default function BlogPosts() {
             <BlogPostCard
               key={post.id}
               {...post}
-              onEdit={(id) => setLocation(`/blog/edit/${id}`)}
+              onEdit={(id) => setLocation(`/blog-editor/${id}`)}
               onDelete={(id) => {
                 if (confirm("Bu yazıyı silmek istediğinizden emin misiniz?")) {
                   deleteMutation.mutate(parseInt(id));

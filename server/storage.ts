@@ -62,7 +62,7 @@ export class DatabaseStorage implements IStorage {
 
   // Blog Categories
   async getBlogCategories(): Promise<BlogCategory[]> {
-    return await db.select().from(blogCategories).orderBy(blogCategories.name);
+    return await db.select().from(blogCategories).orderBy(blogCategories.title);
   }
 
   async getBlogCategory(id: number): Promise<BlogCategory | undefined> {
@@ -91,7 +91,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .select({ count: sql<number>`count(*)` })
       .from(blogPosts)
-      .where(eq(blogPosts.category_id, categoryId));
+      .where(eq(blogPosts.category, categoryId));
     return Number(result[0]?.count || 0);
   }
 

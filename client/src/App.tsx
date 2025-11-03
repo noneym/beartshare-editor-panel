@@ -29,6 +29,7 @@ function Router() {
       <Route path="/email-templates/edit/:id" component={EmailTemplateEditor} />
       <Route path="/blog-posts" component={BlogPosts} />
       <Route path="/blog-posts/new" component={BlogEditorPage} />
+      <Route path="/blog-editor/:id" component={BlogEditorPage} />
       <Route path="/categories" component={Categories} />
       <Route component={NotFound} />
     </Switch>

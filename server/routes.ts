@@ -266,8 +266,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const users = await storage.getUsersByIds(userIds);
       const phoneNumbers = users
-        .filter((u) => u.phone)
-        .map((u) => cleanPhoneNumber(u.phone!));
+        .filter((u) => u.mobile)
+        .map((u) => cleanPhoneNumber(u.mobile!));
 
       if (phoneNumbers.length === 0) {
         return res.status(400).json({ error: "No valid phone numbers found" });

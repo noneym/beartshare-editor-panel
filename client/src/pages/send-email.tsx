@@ -126,7 +126,6 @@ export default function SendEmail() {
                 <SelectValue placeholder="Şablon seçin veya manuel oluşturun" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Şablon kullanma</SelectItem>
                 {formattedTemplates.map((template) => (
                   <SelectItem key={template.id} value={template.id}>
                     {template.name}
