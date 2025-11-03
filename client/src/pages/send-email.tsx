@@ -1,14 +1,25 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, FileCode } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { MessageComposer } from "@/components/message-composer";
 import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { EmailTemplatePreview } from "@/components/email-template-preview";
 
 export default function SendEmail() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [showTemplatePreview, setShowTemplatePreview] = useState(false);
 
   const mockUsers = [
     { id: "1", name: "Ahmet Yılmaz", email: "ahmet@example.com" },
@@ -46,12 +57,62 @@ export default function SendEmail() {
 
   const selectedRecipients = mockUsers.filter((u) => selectedUsers.has(u.id));
 
+  const mockTemplates = [
+    {
+      id: "1",
+      name: "Hoş Geldiniz E-postası",
+      subject: "Merhaba [isim], Beartshare'e Hoş Geldiniz!",
+      content: "<h2>Merhaba [isim] [soyisim]!</h2><p>Beartshare ailesine katıldığınız için teşekkür ederiz. E-posta adresiniz: [email]</p><p>[metin]</p>",
+    },
+    {
+      id: "2",
+      name: "Şifre Sıfırlama",
+      subject: "[isim], şifrenizi sıfırlayın",
+      content: "<h2>Merhaba [isim]!</h2><p>Şifre sıfırlama talebiniz alındı. [email] adresinize gönderilen bağlantıyı kullanarak şifrenizi sıfırlayabilirsiniz.</p><p>[metin]</p>",
+    },
+  ];
+
+  const currentTemplate = mockTemplates.find(t => t.id === selectedTemplate);
+
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div>
         <h1 className="text-2xl font-bold mb-2">E-posta Gönder</h1>
         <p className="text-muted-foreground">Kullanıcılara toplu e-posta gönderin.</p>
       </div>
+
+      <Card className="p-4">
+        <div className="flex items-end gap-4">
+          <div className="flex-1">
+            <Label htmlFor="template-select" className="text-sm font-medium mb-2 block">
+              E-posta Şablonu Seç (İsteğe Bağlı)
+            </Label>
+            <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+              <SelectTrigger id="template-select" className="h-11" data-testid="select-template">
+                <SelectValue placeholder="Şablon seçin veya manuel oluşturun" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Şablon kullanma</SelectItem>
+                {mockTemplates.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    {template.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {selectedTemplate && (
+            <Button
+              variant="outline"
+              onClick={() => setShowTemplatePreview(true)}
+              data-testid="button-preview-selected-template"
+            >
+              <FileCode className="w-4 h-4 mr-2" />
+              Önizle
+            </Button>
+          )}
+        </div>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="p-4 lg:col-span-1">
@@ -112,6 +173,14 @@ export default function SendEmail() {
           />
         </div>
       </div>
+
+      {showTemplatePreview && currentTemplate && (
+        <EmailTemplatePreview
+          open={showTemplatePreview}
+          onClose={() => setShowTemplatePreview(false)}
+          template={currentTemplate}
+        />
+      )}
     </div>
   );
 }

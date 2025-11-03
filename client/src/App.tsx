@@ -14,6 +14,8 @@ import SendSMS from "@/pages/send-sms";
 import BlogPosts from "@/pages/blog-posts";
 import Categories from "@/pages/categories";
 import BlogEditorPage from "@/pages/blog-editor-page";
+import EmailTemplates from "@/pages/email-templates";
+import EmailTemplateEditor from "@/pages/email-template-editor";
 
 function Router() {
   return (
@@ -22,6 +24,9 @@ function Router() {
       <Route path="/users" component={Users} />
       <Route path="/send-email" component={SendEmail} />
       <Route path="/send-sms" component={SendSMS} />
+      <Route path="/email-templates" component={EmailTemplates} />
+      <Route path="/email-templates/new" component={EmailTemplateEditor} />
+      <Route path="/email-templates/edit/:id" component={EmailTemplateEditor} />
       <Route path="/blog-posts" component={BlogPosts} />
       <Route path="/blog-posts/new" component={BlogEditorPage} />
       <Route path="/categories" component={Categories} />

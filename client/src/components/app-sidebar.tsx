@@ -1,4 +1,4 @@
-import { Users, Mail, MessageSquare, FileText, FolderOpen, LayoutDashboard, Settings } from "lucide-react";
+import { Users, Mail, MessageSquare, FileText, FolderOpen, LayoutDashboard, Settings, FileCode } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -28,6 +28,11 @@ const menuItems = [
     title: "E-posta Gönder",
     url: "/send-email",
     icon: Mail,
+  },
+  {
+    title: "E-posta Şablonları",
+    url: "/email-templates",
+    icon: FileCode,
   },
   {
     title: "SMS Gönder",
