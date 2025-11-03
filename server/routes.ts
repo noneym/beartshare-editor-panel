@@ -1,15 +1,290 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { sendEmail, replaceTemplateTags } from "./email";
+import { sendSMS, cleanPhoneNumber } from "./sms";
+import {
+  insertBlogCategorySchema,
+  insertBlogPostSchema,
+  insertEmailTemplateSchema,
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  // Users API
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const user = await storage.getUser(parseInt(req.params.id));
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ error: "Failed to fetch user" });
+    }
+  });
+
+  // Blog Categories API
+  app.get("/api/blog-categories", async (req, res) => {
+    try {
+      const categories = await storage.getBlogCategories();
+      
+      // Add post count to each category
+      const categoriesWithCount = await Promise.all(
+        categories.map(async (cat) => ({
+          ...cat,
+          postCount: await storage.getBlogCategoryPostCount(cat.id),
+        }))
+      );
+      
+      res.json(categoriesWithCount);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ error: "Failed to fetch categories" });
+    }
+  });
+
+  app.post("/api/blog-categories", async (req, res) => {
+    try {
+      const validated = insertBlogCategorySchema.parse(req.body);
+      const category = await storage.createBlogCategory(validated);
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      res.status(400).json({ error: "Invalid category data" });
+    }
+  });
+
+  app.put("/api/blog-categories/:id", async (req, res) => {
+    try {
+      const validated = insertBlogCategorySchema.partial().parse(req.body);
+      const category = await storage.updateBlogCategory(parseInt(req.params.id), validated);
+      if (!category) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error("Error updating category:", error);
+      res.status(400).json({ error: "Invalid category data" });
+    }
+  });
+
+  app.delete("/api/blog-categories/:id", async (req, res) => {
+    try {
+      await storage.deleteBlogCategory(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      res.status(500).json({ error: "Failed to delete category" });
+    }
+  });
+
+  // Blog Posts API
+  app.get("/api/blog-posts", async (req, res) => {
+    try {
+      const posts = await storage.getBlogPosts();
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      res.status(500).json({ error: "Failed to fetch posts" });
+    }
+  });
+
+  app.get("/api/blog-posts/:id", async (req, res) => {
+    try {
+      const post = await storage.getBlogPost(parseInt(req.params.id));
+      if (!post) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching post:", error);
+      res.status(500).json({ error: "Failed to fetch post" });
+    }
+  });
+
+  app.post("/api/blog-posts", async (req, res) => {
+    try {
+      const validated = insertBlogPostSchema.parse(req.body);
+      const post = await storage.createBlogPost(validated);
+      res.json(post);
+    } catch (error) {
+      console.error("Error creating post:", error);
+      res.status(400).json({ error: "Invalid post data" });
+    }
+  });
+
+  app.put("/api/blog-posts/:id", async (req, res) => {
+    try {
+      const validated = insertBlogPostSchema.partial().parse(req.body);
+      const post = await storage.updateBlogPost(parseInt(req.params.id), validated);
+      if (!post) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      res.json(post);
+    } catch (error) {
+      console.error("Error updating post:", error);
+      res.status(400).json({ error: "Invalid post data" });
+    }
+  });
+
+  app.delete("/api/blog-posts/:id", async (req, res) => {
+    try {
+      await storage.deleteBlogPost(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      res.status(500).json({ error: "Failed to delete post" });
+    }
+  });
+
+  // Email Templates API
+  app.get("/api/email-templates", async (req, res) => {
+    try {
+      const templates = await storage.getEmailTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  app.get("/api/email-templates/:id", async (req, res) => {
+    try {
+      const template = await storage.getEmailTemplate(parseInt(req.params.id));
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching template:", error);
+      res.status(500).json({ error: "Failed to fetch template" });
+    }
+  });
+
+  app.post("/api/email-templates", async (req, res) => {
+    try {
+      const validated = insertEmailTemplateSchema.parse(req.body);
+      const template = await storage.createEmailTemplate(validated);
+      res.json(template);
+    } catch (error) {
+      console.error("Error creating template:", error);
+      res.status(400).json({ error: "Invalid template data" });
+    }
+  });
+
+  app.put("/api/email-templates/:id", async (req, res) => {
+    try {
+      const validated = insertEmailTemplateSchema.partial().parse(req.body);
+      const template = await storage.updateEmailTemplate(parseInt(req.params.id), validated);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error updating template:", error);
+      res.status(400).json({ error: "Invalid template data" });
+    }
+  });
+
+  app.delete("/api/email-templates/:id", async (req, res) => {
+    try {
+      await storage.deleteEmailTemplate(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      res.status(500).json({ error: "Failed to delete template" });
+    }
+  });
+
+  // Send Email API
+  app.post("/api/send-email", async (req, res) => {
+    try {
+      const { userIds, subject, message, templateId, customText } = req.body;
+
+      if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ error: "User IDs required" });
+      }
+
+      const users = await storage.getUsersByIds(userIds);
+      
+      let finalSubject = subject;
+      let finalMessage = message;
+
+      // If template is used, get template and replace tags
+      if (templateId) {
+        const template = await storage.getEmailTemplate(parseInt(templateId));
+        if (template) {
+          finalSubject = template.subject;
+          finalMessage = template.content;
+        }
+      }
+
+      // Send emails to all users
+      const emailPromises = users.map((user) => {
+        const personalizedSubject = replaceTemplateTags(finalSubject, user, customText);
+        const personalizedMessage = replaceTemplateTags(finalMessage, user, customText);
+
+        return sendEmail({
+          to: [user.email],
+          subject: personalizedSubject,
+          html: personalizedMessage,
+        });
+      });
+
+      await Promise.all(emailPromises);
+
+      res.json({ success: true, sentCount: users.length });
+    } catch (error) {
+      console.error("Error sending emails:", error);
+      res.status(500).json({ error: "Failed to send emails" });
+    }
+  });
+
+  // Send SMS API
+  app.post("/api/send-sms", async (req, res) => {
+    try {
+      const { userIds, message } = req.body;
+
+      if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ error: "User IDs required" });
+      }
+
+      if (!message || message.trim().length === 0) {
+        return res.status(400).json({ error: "Message required" });
+      }
+
+      const users = await storage.getUsersByIds(userIds);
+      const phoneNumbers = users
+        .filter((u) => u.phone)
+        .map((u) => cleanPhoneNumber(u.phone!));
+
+      if (phoneNumbers.length === 0) {
+        return res.status(400).json({ error: "No valid phone numbers found" });
+      }
+
+      const result = await sendSMS({
+        message,
+        recipients: phoneNumbers,
+      });
+
+      res.json({ success: true, sentCount: phoneNumbers.length, result });
+    } catch (error) {
+      console.error("Error sending SMS:", error);
+      res.status(500).json({ error: "Failed to send SMS" });
+    }
+  });
 
   const httpServer = createServer(app);
-
   return httpServer;
 }
