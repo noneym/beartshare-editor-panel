@@ -23,13 +23,8 @@ export default function BlogEditorPage() {
   const { toast } = useToast();
 
   const [title, setTitle] = useState("");
-  const [categoryId, setCategoryId] = useState<string>("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<string>("draft");
-
-  const { data: categories = [] } = useQuery<BlogCategory[]>({
-    queryKey: ["/api/blog-categories"],
-  });
 
   const { data: post, isLoading } = useQuery<BlogPost>({
     queryKey: ["/api/blog-posts", id],
@@ -39,14 +34,13 @@ export default function BlogEditorPage() {
   useEffect(() => {
     if (post) {
       setTitle(post.title);
-      setCategoryId(post.category_id?.toString() || "");
       setContent(post.content);
       setStatus(post.status || "draft");
     }
   }, [post]);
 
   const saveMutation = useMutation({
-    mutationFn: async (data: { title: string; content: string; category_id?: number; status: string }) => {
+    mutationFn: async (data: { title: string; content: string; status: string }) => {
       if (id) {
         const res = await apiRequest("PUT", `/api/blog-posts/${id}`, data);
         return res.json();
@@ -85,13 +79,12 @@ export default function BlogEditorPage() {
     saveMutation.mutate({
       title,
       content,
-      category_id: categoryId ? parseInt(categoryId) : undefined,
       status,
     });
   };
 
   const handlePreview = () => {
-    console.log("Preview blog:", { title, categoryId, content, status });
+    console.log("Preview blog:", { title, content, status });
   };
 
   return (
@@ -126,25 +119,6 @@ export default function BlogEditorPage() {
             className="text-xl font-bold h-12"
             data-testid="input-title"
           />
-        </div>
-
-        <div>
-          <Label htmlFor="category" className="text-sm font-medium mb-2 block">
-            Kategori
-          </Label>
-          <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger className="h-11" data-testid="select-category">
-              <SelectValue placeholder="Kategori seçin" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Kategorisiz</SelectItem>
-              {categories.map(cat => (
-                <SelectItem key={cat.id} value={cat.id.toString()}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <div>

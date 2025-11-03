@@ -57,7 +57,7 @@ export default function SendEmail() {
 
   const formattedUsers = users.map(user => ({
     id: user.id.toString(),
-    name: `${user.name} ${user.surname || ''}`.trim(),
+    name: user.name,
     email: user.email,
   }));
 

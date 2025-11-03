@@ -9,6 +9,7 @@ export default function Categories() {
 
   const { data: categories = [], isLoading } = useQuery<(BlogCategory & { postCount?: number })[]>({
     queryKey: ["/api/blog-categories"],
+    retry: false,
   });
 
   const addMutation = useMutation({

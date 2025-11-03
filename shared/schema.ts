@@ -5,9 +5,7 @@ import { z } from "zod";
 export const users = mysqlTable("users", {
   id: int("id").primaryKey().autoincrement(),
   name: varchar("name", { length: 255 }).notNull(),
-  surname: varchar("surname", { length: 255 }),
   email: varchar("email", { length: 255 }).notNull(),
-  phone: varchar("phone", { length: 50 }),
   status: varchar("status", { length: 50 }).default("active"),
   created_at: timestamp("created_at").defaultNow(),
 });
@@ -23,7 +21,6 @@ export const blogPosts = mysqlTable("blog_post", {
   id: int("id").primaryKey().autoincrement(),
   title: varchar("title", { length: 500 }).notNull(),
   content: text("content").notNull(),
-  category_id: int("category_id"),
   status: varchar("status", { length: 50 }).default("draft"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
