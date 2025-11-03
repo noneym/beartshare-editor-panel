@@ -14,22 +14,54 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { EmailTemplatePreview } from "@/components/email-template-preview";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { User, EmailTemplate } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SendEmail() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [showTemplatePreview, setShowTemplatePreview] = useState(false);
+  const { toast } = useToast();
 
-  const mockUsers = [
-    { id: "1", name: "Ahmet Yılmaz", email: "ahmet@example.com" },
-    { id: "2", name: "Ayşe Demir", email: "ayse@example.com" },
-    { id: "3", name: "Mehmet Kaya", email: "mehmet@example.com" },
-    { id: "4", name: "Fatma Öz", email: "fatma@example.com" },
-    { id: "5", name: "Ali Şahin", email: "ali@example.com" },
-  ];
+  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
 
-  const filteredUsers = mockUsers.filter(
+  const { data: templates = [], isLoading: templatesLoading } = useQuery<EmailTemplate[]>({
+    queryKey: ["/api/email-templates"],
+  });
+
+  const sendEmailMutation = useMutation({
+    mutationFn: async (data: { userIds: number[], subject?: string, message?: string, templateId?: number, customText?: string }) => {
+      const res = await apiRequest("POST", "/api/send-email", data);
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Başarılı",
+        description: `${data.sentCount} kullanıcıya e-posta gönderildi.`,
+      });
+      setSelectedUsers(new Set());
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "E-posta gönderilirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const formattedUsers = users.map(user => ({
+    id: user.id.toString(),
+    name: `${user.name} ${user.surname || ''}`.trim(),
+    email: user.email,
+  }));
+
+  const filteredUsers = formattedUsers.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -55,24 +87,26 @@ export default function SendEmail() {
 
   const allSelected = filteredUsers.length > 0 && filteredUsers.every(u => selectedUsers.has(u.id));
 
-  const selectedRecipients = mockUsers.filter((u) => selectedUsers.has(u.id));
+  const selectedRecipients = formattedUsers.filter((u) => selectedUsers.has(u.id));
 
-  const mockTemplates = [
-    {
-      id: "1",
-      name: "Hoş Geldiniz E-postası",
-      subject: "Merhaba [isim], Beartshare'e Hoş Geldiniz!",
-      content: "<h2>Merhaba [isim] [soyisim]!</h2><p>Beartshare ailesine katıldığınız için teşekkür ederiz. E-posta adresiniz: [email]</p><p>[metin]</p>",
-    },
-    {
-      id: "2",
-      name: "Şifre Sıfırlama",
-      subject: "[isim], şifrenizi sıfırlayın",
-      content: "<h2>Merhaba [isim]!</h2><p>Şifre sıfırlama talebiniz alındı. [email] adresinize gönderilen bağlantıyı kullanarak şifrenizi sıfırlayabilirsiniz.</p><p>[metin]</p>",
-    },
-  ];
+  const formattedTemplates = templates.map(t => ({
+    id: t.id.toString(),
+    name: t.name,
+    subject: t.subject,
+    content: t.content,
+  }));
 
-  const currentTemplate = mockTemplates.find(t => t.id === selectedTemplate);
+  const currentTemplate = formattedTemplates.find(t => t.id === selectedTemplate);
+
+  const handleSendEmail = (data: { subject?: string, message: string }) => {
+    const userIds = Array.from(selectedUsers).map(id => parseInt(id));
+    sendEmailMutation.mutate({
+      userIds,
+      subject: data.subject,
+      message: data.message,
+      templateId: selectedTemplate ? parseInt(selectedTemplate) : undefined,
+    });
+  };
 
   return (
     <div className="p-6 md:p-8 space-y-6">
@@ -93,7 +127,7 @@ export default function SendEmail() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Şablon kullanma</SelectItem>
-                {mockTemplates.map((template) => (
+                {formattedTemplates.map((template) => (
                   <SelectItem key={template.id} value={template.id}>
                     {template.name}
                   </SelectItem>
@@ -164,12 +198,13 @@ export default function SendEmail() {
           <MessageComposer
             type="email"
             recipients={selectedRecipients}
-            onSend={(data) => console.log("Send email:", data)}
+            onSend={handleSendEmail}
             onRemoveRecipient={(id) => {
               const newSelected = new Set(selectedUsers);
               newSelected.delete(id);
               setSelectedUsers(newSelected);
             }}
+            isLoading={sendEmailMutation.isPending}
           />
         </div>
       </div>

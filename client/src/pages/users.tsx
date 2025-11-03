@@ -2,20 +2,25 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { UsersTable } from "@/components/users-table";
+import { useQuery } from "@tanstack/react-query";
+import type { User } from "@shared/schema";
 
 export default function Users() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const mockUsers = [
-    { id: "1", name: "Ahmet Yılmaz", email: "ahmet@example.com", phone: "+90 532 123 4567", status: "active" as const },
-    { id: "2", name: "Ayşe Demir", email: "ayse@example.com", phone: "+90 533 234 5678", status: "active" as const },
-    { id: "3", name: "Mehmet Kaya", email: "mehmet@example.com", phone: "+90 534 345 6789", status: "inactive" as const },
-    { id: "4", name: "Fatma Öz", email: "fatma@example.com", phone: "+90 535 456 7890", status: "active" as const },
-    { id: "5", name: "Ali Şahin", email: "ali@example.com", phone: "+90 536 567 8901", status: "active" as const },
-    { id: "6", name: "Zeynep Arslan", email: "zeynep@example.com", phone: "+90 537 678 9012", status: "active" as const },
-  ];
+  const { data: users = [], isLoading } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
 
-  const filteredUsers = mockUsers.filter(
+  const formattedUsers = users.map(user => ({
+    id: user.id.toString(),
+    name: `${user.name} ${user.surname || ''}`.trim(),
+    email: user.email,
+    phone: user.phone || "",
+    status: (user.status as "active" | "inactive") || "active",
+  }));
+
+  const filteredUsers = formattedUsers.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -42,11 +47,15 @@ export default function Users() {
         </div>
       </div>
 
-      <UsersTable
-        users={filteredUsers}
-        onSendEmail={(ids) => console.log("Send email to:", ids)}
-        onSendSMS={(ids) => console.log("Send SMS to:", ids)}
-      />
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">Yükleniyor...</div>
+      ) : (
+        <UsersTable
+          users={filteredUsers}
+          onSendEmail={(ids) => console.log("Send email to:", ids)}
+          onSendSMS={(ids) => console.log("Send SMS to:", ids)}
+        />
+      )}
     </div>
   );
 }

@@ -13,9 +13,10 @@ interface MessageComposerProps {
   recipients: Array<{ id: string; name: string; email?: string; phone?: string }>;
   onSend?: (data: { subject?: string; message: string }) => void;
   onRemoveRecipient?: (id: string) => void;
+  isLoading?: boolean;
 }
 
-export function MessageComposer({ type, recipients, onSend, onRemoveRecipient }: MessageComposerProps) {
+export function MessageComposer({ type, recipients, onSend, onRemoveRecipient, isLoading }: MessageComposerProps) {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
 
@@ -110,11 +111,11 @@ export function MessageComposer({ type, recipients, onSend, onRemoveRecipient }:
         <div className="flex justify-end">
           <Button
             onClick={handleSend}
-            disabled={!message || recipients.length === 0}
+            disabled={!message || recipients.length === 0 || isLoading}
             data-testid="button-send"
           >
             <Send className="w-4 h-4 mr-2" />
-            {type === "email" ? "E-posta Gönder" : "SMS Gönder"}
+            {isLoading ? "Gönderiliyor..." : type === "email" ? "E-posta Gönder" : "SMS Gönder"}
           </Button>
         </div>
       </div>

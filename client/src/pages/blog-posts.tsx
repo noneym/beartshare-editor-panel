@@ -3,38 +3,55 @@ import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BlogPostCard } from "@/components/blog-post-card";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { BlogPost, BlogCategory } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export default function BlogPosts() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
-  const mockPosts = [
-    {
-      id: "1",
-      title: "React ile Modern Web Uygulamaları Geliştirme",
-      excerpt: "React, kullanıcı arayüzleri oluşturmak için kullanılan popüler bir JavaScript kütüphanesidir. Bu yazıda React'in temellerini öğreneceksiniz.",
-      category: "Teknoloji",
-      date: "15 Ekim 2024",
-      status: "published" as const,
-    },
-    {
-      id: "2",
-      title: "TypeScript Neden Önemli?",
-      excerpt: "TypeScript, JavaScript'e tip güvenliği ekleyen bir programlama dilidir. Büyük projelerde hata oranını düşürür.",
-      category: "Programlama",
-      date: "10 Ekim 2024",
-      status: "draft" as const,
-    },
-    {
-      id: "3",
-      title: "CSS Grid ile Responsive Tasarım",
-      excerpt: "CSS Grid, modern web tasarımında layout oluşturmak için güçlü bir araçtır. Responsive tasarımlar yapmanızı kolaylaştırır.",
-      category: "Tasarım",
-      date: "5 Ekim 2024",
-      status: "published" as const,
-    },
-  ];
+  const { data: posts = [], isLoading: postsLoading } = useQuery<BlogPost[]>({
+    queryKey: ["/api/blog-posts"],
+  });
 
-  const filteredPosts = mockPosts.filter(
+  const { data: categories = [] } = useQuery<BlogCategory[]>({
+    queryKey: ["/api/blog-categories"],
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/blog-posts/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/blog-posts"] });
+      toast({
+        title: "Başarılı",
+        description: "Blog yazısı silindi.",
+      });
+    },
+  });
+
+  const getCategoryName = (categoryId: number | null) => {
+    if (!categoryId) return "Kategorisiz";
+    const category = categories.find(c => c.id === categoryId);
+    return category?.name || "Kategorisiz";
+  };
+
+  const formattedPosts = posts.map(post => ({
+    id: post.id.toString(),
+    title: post.title,
+    excerpt: post.content.substring(0, 150).replace(/<[^>]*>/g, ''),
+    category: getCategoryName(post.category_id),
+    date: post.created_at ? new Date(post.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '',
+    status: (post.status || 'draft') as 'published' | 'draft',
+  }));
+
+  const filteredPosts = formattedPosts.filter(
     (post) =>
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -47,7 +64,7 @@ export default function BlogPosts() {
           <h1 className="text-2xl font-bold mb-2">Blog Yazıları</h1>
           <p className="text-muted-foreground">Blog yazılarınızı oluşturun ve yönetin.</p>
         </div>
-        <Button data-testid="button-new-post">
+        <Button onClick={() => setLocation("/blog/new")} data-testid="button-new-post">
           <Plus className="w-4 h-4 mr-2" />
           Yeni Yazı
         </Button>
@@ -66,17 +83,25 @@ export default function BlogPosts() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredPosts.map((post) => (
-          <BlogPostCard
-            key={post.id}
-            {...post}
-            onEdit={(id) => console.log("Edit post:", id)}
-            onDelete={(id) => console.log("Delete post:", id)}
-            onView={(id) => console.log("View post:", id)}
-          />
-        ))}
-      </div>
+      {postsLoading ? (
+        <div className="text-center py-8 text-muted-foreground">Yükleniyor...</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredPosts.map((post) => (
+            <BlogPostCard
+              key={post.id}
+              {...post}
+              onEdit={(id) => setLocation(`/blog/edit/${id}`)}
+              onDelete={(id) => {
+                if (confirm("Bu yazıyı silmek istediğinizden emin misiniz?")) {
+                  deleteMutation.mutate(parseInt(id));
+                }
+              }}
+              onView={(id) => setLocation(`/blog/${id}`)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

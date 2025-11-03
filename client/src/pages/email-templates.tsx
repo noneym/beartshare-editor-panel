@@ -5,52 +5,71 @@ import { Input } from "@/components/ui/input";
 import { EmailTemplateCard } from "@/components/email-template-card";
 import { EmailTemplatePreview } from "@/components/email-template-preview";
 import { useLocation } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { EmailTemplate } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EmailTemplates() {
   const [searchQuery, setSearchQuery] = useState("");
   const [previewTemplate, setPreviewTemplate] = useState<any>(null);
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
-  const mockTemplates = [
-    {
-      id: "1",
-      name: "Hoş Geldiniz E-postası",
-      subject: "Merhaba [isim], Beartshare'e Hoş Geldiniz!",
-      content: "<h2>Merhaba [isim] [soyisim]!</h2><p>Beartshare ailesine katıldığınız için teşekkür ederiz. E-posta adresiniz: [email]</p><p>[metin]</p>",
-      tags: ["[isim]", "[soyisim]", "[email]", "[metin]"],
-    },
-    {
-      id: "2",
-      name: "Şifre Sıfırlama",
-      subject: "[isim], şifrenizi sıfırlayın",
-      content: "<h2>Merhaba [isim]!</h2><p>Şifre sıfırlama talebiniz alındı. [email] adresinize gönderilen bağlantıyı kullanarak şifrenizi sıfırlayabilirsiniz.</p><p>[metin]</p>",
-      tags: ["[isim]", "[email]", "[metin]"],
-    },
-    {
-      id: "3",
-      name: "Kampanya Duyurusu",
-      subject: "Özel Kampanya - [metin]",
-      content: "<h2>Sayın [isim] [soyisim],</h2><p>Sizin için özel bir kampanyamız var! [metin]</p><p>Detaylar için [email] adresinden bize ulaşabilirsiniz.</p>",
-      tags: ["[isim]", "[soyisim]", "[email]", "[metin]"],
-    },
-  ];
+  const { data: templates = [], isLoading } = useQuery<EmailTemplate[]>({
+    queryKey: ["/api/email-templates"],
+  });
 
-  const filteredTemplates = mockTemplates.filter(
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/email-templates/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/email-templates"] });
+      toast({
+        title: "Başarılı",
+        description: "Şablon silindi.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "Şablon silinirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const formattedTemplates = templates.map(t => ({
+    id: t.id.toString(),
+    name: t.name,
+    subject: t.subject,
+    content: t.content,
+    tags: ["[isim]", "[soyisim]", "[email]", "[metin]"],
+  }));
+
+  const filteredTemplates = formattedTemplates.filter(
     (template) =>
       template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       template.subject.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handlePreview = (id: string) => {
-    const template = mockTemplates.find(t => t.id === id);
+    const template = formattedTemplates.find(t => t.id === id);
     if (template) {
       setPreviewTemplate(template);
     }
   };
 
   const handleUse = (id: string) => {
-    console.log("Use template:", id);
     setLocation(`/send-email?template=${id}`);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Bu şablonu silmek istediğinizden emin misiniz?")) {
+      deleteMutation.mutate(parseInt(id));
+    }
   };
 
   return (
@@ -79,19 +98,23 @@ export default function EmailTemplates() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTemplates.map((template) => (
-          <EmailTemplateCard
-            key={template.id}
-            {...template}
-            preview={template.content.substring(0, 150)}
-            onEdit={(id) => setLocation(`/email-templates/edit/${id}`)}
-            onDelete={(id) => console.log("Delete template:", id)}
-            onPreview={handlePreview}
-            onUse={handleUse}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">Yükleniyor...</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTemplates.map((template) => (
+            <EmailTemplateCard
+              key={template.id}
+              {...template}
+              preview={template.content.substring(0, 150)}
+              onEdit={(id) => setLocation(`/email-templates/edit/${id}`)}
+              onDelete={handleDelete}
+              onPreview={handlePreview}
+              onUse={handleUse}
+            />
+          ))}
+        </div>
+      )}
 
       {previewTemplate && (
         <EmailTemplatePreview

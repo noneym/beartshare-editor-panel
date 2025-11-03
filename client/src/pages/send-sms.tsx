@@ -5,20 +5,50 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { MessageComposer } from "@/components/message-composer";
 import { Card } from "@/components/ui/card";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import type { User } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SendSMS() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
-  const mockUsers = [
-    { id: "1", name: "Ahmet Yılmaz", phone: "+90 532 123 4567" },
-    { id: "2", name: "Ayşe Demir", phone: "+90 533 234 5678" },
-    { id: "3", name: "Mehmet Kaya", phone: "+90 534 345 6789" },
-    { id: "4", name: "Fatma Öz", phone: "+90 535 456 7890" },
-    { id: "5", name: "Ali Şahin", phone: "+90 536 567 8901" },
-  ];
+  const { data: users = [], isLoading } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
 
-  const filteredUsers = mockUsers.filter(
+  const sendSMSMutation = useMutation({
+    mutationFn: async (data: { userIds: number[], message: string }) => {
+      const res = await apiRequest("POST", "/api/send-sms", data);
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Başarılı",
+        description: `${data.sentCount} kullanıcıya SMS gönderildi.`,
+      });
+      setSelectedUsers(new Set());
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "SMS gönderilirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const formattedUsers = users
+    .filter(u => u.phone)
+    .map(user => ({
+      id: user.id.toString(),
+      name: `${user.name} ${user.surname || ''}`.trim(),
+      phone: user.phone!,
+    }));
+
+  const filteredUsers = formattedUsers.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.phone.includes(searchQuery)
@@ -44,7 +74,15 @@ export default function SendSMS() {
 
   const allSelected = filteredUsers.length > 0 && filteredUsers.every(u => selectedUsers.has(u.id));
 
-  const selectedRecipients = mockUsers.filter((u) => selectedUsers.has(u.id));
+  const selectedRecipients = formattedUsers.filter((u) => selectedUsers.has(u.id));
+
+  const handleSendSMS = (data: { message: string }) => {
+    const userIds = Array.from(selectedUsers).map(id => parseInt(id));
+    sendSMSMutation.mutate({
+      userIds,
+      message: data.message,
+    });
+  };
 
   return (
     <div className="p-6 md:p-8 space-y-6">
@@ -103,12 +141,13 @@ export default function SendSMS() {
           <MessageComposer
             type="sms"
             recipients={selectedRecipients}
-            onSend={(data) => console.log("Send SMS:", data)}
+            onSend={handleSendSMS}
             onRemoveRecipient={(id) => {
               const newSelected = new Set(selectedUsers);
               newSelected.delete(id);
               setSelectedUsers(newSelected);
             }}
+            isLoading={sendSMSMutation.isPending}
           />
         </div>
       </div>
