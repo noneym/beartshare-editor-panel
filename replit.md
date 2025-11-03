@@ -6,6 +6,23 @@ Beartshare Admin Panel is a full-stack administrative dashboard built with React
 
 The platform is designed as an information-dense Material Design admin interface focused on CRUD operations, data tables, forms, and bulk communication workflows.
 
+## Recent Updates (November 3, 2025)
+
+**Database Schema Alignment:**
+- Synchronized all schemas with actual MariaDB database structure
+- Fixed field naming: `users.mobile` (not phone), `users.lastname` (not surname), `blog_category.title` (not name)
+- Fixed blog post category field to use `category` (integer) instead of `category_id`
+
+**Bug Fixes:**
+- Fixed SelectItem empty value error on send-email page by removing invalid empty string option
+- Fixed blog editor 404 error by adding `/blog-editor/:id` route and correcting navigation paths
+- Fixed blog categories SQL error (missing orderBy field)
+- Fixed SMS sending to use correct `mobile` field from users table
+
+**Routes Updated:**
+- `/blog-posts/new` - Create new blog post
+- `/blog-editor/:id` - Edit existing blog post (was incorrectly `/blog/edit/:id`)
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
