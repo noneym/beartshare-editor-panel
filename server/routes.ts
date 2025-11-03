@@ -389,17 +389,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const users = await storage.getUsersByIds(userIds);
       
+      // ALWAYS use subject and message from frontend
+      // Template is only used for reference, frontend already has the content
       let finalSubject = subject;
       let finalMessage = message;
-
-      // If template is used, get template and replace tags
-      if (templateId) {
-        const template = await storage.getEmailTemplate(parseInt(templateId));
-        if (template) {
-          finalSubject = template.subject;
-          finalMessage = template.content;
-        }
-      }
 
       // Send emails to all users
       const emailPromises = users.map((user) => {

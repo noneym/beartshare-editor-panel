@@ -24,6 +24,8 @@ export default function SendEmail() {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [showTemplatePreview, setShowTemplatePreview] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
   const { toast } = useToast();
 
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
@@ -98,12 +100,29 @@ export default function SendEmail() {
 
   const currentTemplate = formattedTemplates.find(t => t.id === selectedTemplate);
 
+  // Template seçildiğinde subject ve content'i doldur
+  const handleTemplateChange = (templateId: string) => {
+    setSelectedTemplate(templateId);
+    
+    if (templateId) {
+      const template = formattedTemplates.find(t => t.id === templateId);
+      if (template) {
+        setSubject(template.subject); // Örnek olarak doldur
+        setMessage(template.content); // Örnek olarak doldur
+      }
+    } else {
+      // Template kaldırıldıysa temizle
+      setSubject("");
+      setMessage("");
+    }
+  };
+
   const handleSendEmail = (data: { subject?: string, message: string }) => {
     const userIds = Array.from(selectedUsers).map(id => parseInt(id));
     sendEmailMutation.mutate({
       userIds,
-      subject: data.subject,
-      message: data.message,
+      subject: data.subject, // Kullanıcının yazdığı konu
+      message: data.message, // Kullanıcının yazdığı mesaj
       templateId: selectedTemplate ? parseInt(selectedTemplate) : undefined,
       customText: data.message, // [metin] etiketini mesajla değiştir
     });
@@ -123,7 +142,7 @@ export default function SendEmail() {
               <Label htmlFor="template-select" className="text-sm font-medium mb-2 block">
                 E-posta Şablonu Seç (İsteğe Bağlı)
               </Label>
-              <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+              <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
                 <SelectTrigger id="template-select" className="h-11" data-testid="select-template">
                   <SelectValue placeholder="Şablon seçin veya manuel oluşturun" />
                 </SelectTrigger>
@@ -215,6 +234,10 @@ export default function SendEmail() {
               setSelectedUsers(newSelected);
             }}
             isLoading={sendEmailMutation.isPending}
+            initialSubject={subject}
+            initialMessage={message}
+            onSubjectChange={setSubject}
+            onMessageChange={setMessage}
           />
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,49 @@ interface MessageComposerProps {
   onSend?: (data: { subject?: string; message: string }) => void;
   onRemoveRecipient?: (id: string) => void;
   isLoading?: boolean;
+  initialSubject?: string;
+  initialMessage?: string;
+  onSubjectChange?: (subject: string) => void;
+  onMessageChange?: (message: string) => void;
 }
 
-export function MessageComposer({ type, recipients, onSend, onRemoveRecipient, isLoading }: MessageComposerProps) {
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
+export function MessageComposer({ 
+  type, 
+  recipients, 
+  onSend, 
+  onRemoveRecipient, 
+  isLoading,
+  initialSubject = "",
+  initialMessage = "",
+  onSubjectChange,
+  onMessageChange,
+}: MessageComposerProps) {
+  const [subject, setSubject] = useState(initialSubject);
+  const [message, setMessage] = useState(initialMessage);
+
+  // Sync when props change (template selection)
+  useEffect(() => {
+    if (initialSubject !== subject) {
+      setSubject(initialSubject);
+    }
+  }, [initialSubject]);
+
+  useEffect(() => {
+    if (initialMessage !== message) {
+      setMessage(initialMessage);
+    }
+  }, [initialMessage]);
+
+  // Sync with parent state
+  const handleSubjectChange = (newSubject: string) => {
+    setSubject(newSubject);
+    onSubjectChange?.(newSubject);
+  };
+
+  const handleMessageChange = (newMessage: string) => {
+    setMessage(newMessage);
+    onMessageChange?.(newMessage);
+  };
 
   const handleSend = () => {
     const data = type === "email" ? { subject, message } : { message };
@@ -69,7 +107,7 @@ export function MessageComposer({ type, recipients, onSend, onRemoveRecipient, i
             <Input
               id="subject"
               value={subject}
-              onChange={(e) => setSubject(e.target.value)}
+              onChange={(e) => handleSubjectChange(e.target.value)}
               placeholder="E-posta konusu"
               className="h-11"
               data-testid="input-subject"
@@ -84,7 +122,7 @@ export function MessageComposer({ type, recipients, onSend, onRemoveRecipient, i
           {type === "email" ? (
             <AdvancedBlogEditor
               initialContent={message}
-              onChange={setMessage}
+              onChange={handleMessageChange}
             />
           ) : (
             <>
@@ -98,7 +136,7 @@ export function MessageComposer({ type, recipients, onSend, onRemoveRecipient, i
               <Textarea
                 id="message"
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={(e) => handleMessageChange(e.target.value)}
                 placeholder="SMS mesajınızı yazın..."
                 className="min-h-48 resize-none"
                 maxLength={maxLength}
