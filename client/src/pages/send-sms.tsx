@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { MessageComposer } from "@/components/message-composer";
 import { Card } from "@/components/ui/card";
 
@@ -33,6 +34,16 @@ export default function SendSMS() {
     setSelectedUsers(newSelected);
   };
 
+  const selectAll = () => {
+    setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
+  };
+
+  const deselectAll = () => {
+    setSelectedUsers(new Set());
+  };
+
+  const allSelected = filteredUsers.length > 0 && filteredUsers.every(u => selectedUsers.has(u.id));
+
   const selectedRecipients = mockUsers.filter((u) => selectedUsers.has(u.id));
 
   return (
@@ -44,7 +55,17 @@ export default function SendSMS() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="p-4 lg:col-span-1">
-          <h3 className="font-bold mb-4">Alıcıları Seçin</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold">Alıcıları Seçin</h3>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={allSelected ? deselectAll : selectAll}
+              data-testid="button-select-all"
+            >
+              {allSelected ? "Tümünü Kaldır" : "Tümünü Seç"}
+            </Button>
+          </div>
           <div className="mb-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

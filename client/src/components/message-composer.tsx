@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BlogEditor } from "./blog-editor";
 
 interface MessageComposerProps {
   type: "email" | "sms";
@@ -76,25 +77,34 @@ export function MessageComposer({ type, recipients, onSend, onRemoveRecipient }:
         )}
 
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <Label htmlFor="message" className="text-sm font-medium">
-              Mesaj
-            </Label>
-            {maxLength && (
-              <span className="text-xs text-muted-foreground">
-                {message.length}/{maxLength}
-              </span>
-            )}
-          </div>
-          <Textarea
-            id="message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={type === "email" ? "E-posta içeriğinizi yazın..." : "SMS mesajınızı yazın..."}
-            className="min-h-48 resize-none"
-            maxLength={maxLength}
-            data-testid="input-message"
-          />
+          <Label className="text-sm font-medium mb-2 block">
+            Mesaj
+          </Label>
+          {type === "email" ? (
+            <BlogEditor
+              initialContent={message}
+              onChange={setMessage}
+            />
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                {maxLength && (
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    {message.length}/{maxLength}
+                  </span>
+                )}
+              </div>
+              <Textarea
+                id="message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="SMS mesajınızı yazın..."
+                className="min-h-48 resize-none"
+                maxLength={maxLength}
+                data-testid="input-message"
+              />
+            </>
+          )}
         </div>
 
         <div className="flex justify-end">
