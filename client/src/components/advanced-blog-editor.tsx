@@ -211,7 +211,7 @@ export function AdvancedBlogEditor({ initialContent = "", onChange }: AdvancedBl
     setIsUploading(true);
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('image', file);
 
       const response = await fetch('/api/upload-image', {
         method: 'POST',

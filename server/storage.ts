@@ -113,7 +113,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost | undefined> {
-    await db.update(blogPosts).set({ ...post, updated_at: new Date() }).where(eq(blogPosts.id, id));
+    await db.update(blogPosts).set(post).where(eq(blogPosts.id, id));
     return await this.getBlogPost(id);
   }
 
