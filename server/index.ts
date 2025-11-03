@@ -5,6 +5,9 @@ import { log } from "./logger";
 
 const app = express();
 
+// Trust proxy - required for production behind reverse proxy (Nginx, Easypanel, etc.)
+app.set('trust proxy', 1);
+
 // Session configuration
 app.use(
   session({
@@ -15,6 +18,7 @@ app.use(
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'strict',
     },
   })
 );
