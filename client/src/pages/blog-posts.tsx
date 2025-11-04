@@ -3,6 +3,7 @@ import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BlogPostCard } from "@/components/blog-post-card";
+import { BlogPostPreview } from "@/components/blog-post-preview";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { BlogPost, BlogCategory } from "@shared/schema";
@@ -11,6 +12,7 @@ import { useLocation } from "wouter";
 
 export default function BlogPosts() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [previewPost, setPreviewPost] = useState<any>(null);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -46,6 +48,7 @@ export default function BlogPosts() {
     id: post.id.toString(),
     title: post.title,
     excerpt: post.content.substring(0, 150).replace(/<[^>]*>/g, ''),
+    content: post.content, // Full HTML content for preview
     category: getCategoryName(post.category),
     date: post.created_at ? new Date(post.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '',
     status: (post.status || 'draft') as 'published' | 'draft',
@@ -97,11 +100,22 @@ export default function BlogPosts() {
                   deleteMutation.mutate(parseInt(id));
                 }
               }}
-              onView={(id) => setLocation(`/blog/${id}`)}
+              onView={(id) => {
+                const post = formattedPosts.find(p => p.id === id);
+                if (post) {
+                  setPreviewPost(post);
+                }
+              }}
             />
           ))}
         </div>
       )}
+
+      <BlogPostPreview
+        open={!!previewPost}
+        onClose={() => setPreviewPost(null)}
+        post={previewPost || { title: '', content: '', category: '', date: '' }}
+      />
     </div>
   );
 }

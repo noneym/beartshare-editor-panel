@@ -4,11 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { UsersTable } from "@/components/users-table";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import type { User } from "@shared/schema";
 import * as XLSX from "xlsx";
 
 export default function Users() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [, setLocation] = useLocation();
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
@@ -88,8 +90,8 @@ export default function Users() {
       ) : (
         <UsersTable
           users={filteredUsers}
-          onSendEmail={(ids) => console.log("Send email to:", ids)}
-          onSendSMS={(ids) => console.log("Send SMS to:", ids)}
+          onSendEmail={(ids) => setLocation(`/send-email?users=${ids.join(',')}`)}
+          onSendSMS={(ids) => setLocation(`/send-sms?users=${ids.join(',')}`)}
         />
       )}
     </div>

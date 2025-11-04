@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,6 +14,17 @@ export default function SendSMS() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  
+  // Read query params on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const usersParam = urlParams.get('users');
+    
+    if (usersParam) {
+      const userIds = usersParam.split(',');
+      setSelectedUsers(new Set(userIds));
+    }
+  }, []);
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],

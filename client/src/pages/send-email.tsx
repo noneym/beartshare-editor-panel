@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, FileCode } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,6 +27,23 @@ export default function SendEmail() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const { toast } = useToast();
+  
+  // Read query params on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const usersParam = urlParams.get('users');
+    const templateParam = urlParams.get('template');
+    
+    if (usersParam) {
+      const userIds = usersParam.split(',');
+      setSelectedUsers(new Set(userIds));
+    }
+    
+    // Template will be handled by handleTemplateChange via another useEffect
+    if (templateParam) {
+      setSelectedTemplate(templateParam);
+    }
+  }, []);
 
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
@@ -103,19 +120,25 @@ export default function SendEmail() {
   // Template seçildiğinde subject ve content'i doldur
   const handleTemplateChange = (templateId: string) => {
     setSelectedTemplate(templateId);
-    
-    if (templateId) {
-      const template = formattedTemplates.find(t => t.id === templateId);
+  };
+  
+  // When template changes or templates load, populate subject/message
+  useEffect(() => {
+    if (selectedTemplate && formattedTemplates.length > 0) {
+      const template = formattedTemplates.find(t => t.id === selectedTemplate);
       if (template) {
         setSubject(template.subject); // Örnek olarak doldur
         setMessage(template.content); // Örnek olarak doldur
+      } else {
+        // Invalid template ID, clear selection
+        setSelectedTemplate("");
       }
-    } else {
+    } else if (!selectedTemplate) {
       // Template kaldırıldıysa temizle
       setSubject("");
       setMessage("");
     }
-  };
+  }, [selectedTemplate, formattedTemplates]);
 
   const handleSendEmail = (data: { subject?: string, message: string }) => {
     const userIds = Array.from(selectedUsers).map(id => parseInt(id));

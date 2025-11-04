@@ -37,8 +37,14 @@ export function EmailTemplatePreview({ open, onClose, template }: EmailTemplateP
       .replace(/\[metin\]/g, previewData.metin);
   };
 
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Şablon Önizleme: {template.name}</DialogTitle>
