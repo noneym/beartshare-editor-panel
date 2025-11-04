@@ -30,6 +30,7 @@ export default function BlogEditorPage() {
   const [status, setStatus] = useState<string>("draft");
   const [imageUrl, setImageUrl] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
+  const [editorType, setEditorType] = useState<'quill' | 'advanced'>('quill');
 
   const { data: categories = [] } = useQuery<BlogCategory[]>({
     queryKey: ["/api/blog-categories"],
@@ -161,7 +162,7 @@ export default function BlogEditorPage() {
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-5xl mx-auto">
+    <div className="p-6 md:p-8 space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold mb-2">{id ? "Blog Yazısını Düzenle" : "Blog Yazısı Oluştur"}</h1>
@@ -277,14 +278,41 @@ export default function BlogEditorPage() {
         </div>
 
         <div>
-          <Label className="text-sm font-medium mb-3 block">
-            İçerik
-            <span className="text-xs text-muted-foreground ml-2">(QuillJS Editor ile test ediliyor)</span>
-          </Label>
-          <QuillBlogEditor
-            initialContent={content}
-            onChange={setContent}
-          />
+          <div className="flex items-center justify-between mb-3">
+            <Label className="text-sm font-medium">
+              İçerik
+            </Label>
+            <div className="flex gap-2">
+              <Button
+                variant={editorType === 'quill' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setEditorType('quill')}
+                data-testid="button-editor-quill"
+              >
+                QuillJS Editör
+              </Button>
+              <Button
+                variant={editorType === 'advanced' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setEditorType('advanced')}
+                data-testid="button-editor-advanced"
+              >
+                Gelişmiş Editör
+              </Button>
+            </div>
+          </div>
+          
+          {editorType === 'quill' ? (
+            <QuillBlogEditor
+              initialContent={content}
+              onChange={setContent}
+            />
+          ) : (
+            <AdvancedBlogEditor
+              initialContent={content}
+              onChange={setContent}
+            />
+          )}
         </div>
       </div>
     </div>
