@@ -60,15 +60,14 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="p-6 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-lg">B</span>
-          </div>
-          <div>
-            <h1 className="font-bold text-base">Beartshare</h1>
-            <p className="text-xs text-muted-foreground">Admin Panel</p>
-          </div>
-        </div>
+        <Link href="/" className="flex items-center">
+          <img 
+            src="/beartshare-logo.svg" 
+            alt="Beartshare" 
+            className="h-8 w-auto"
+            data-testid="logo-image"
+          />
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>
