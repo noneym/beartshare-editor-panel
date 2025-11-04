@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import ReactQuill, { Quill } from 'react-quill';
+// @ts-ignore - no type definitions available
 import ImageResize from 'quill-image-resize-module-react';
 import { Button } from '@/components/ui/button';
 
@@ -32,6 +33,7 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
   const [isUploading, setIsUploading] = useState(false);
   const [isHtmlMode, setIsHtmlMode] = useState(false);
   const [htmlContent, setHtmlContent] = useState(initialContent);
+  const [editorContent, setEditorContent] = useState(initialContent);
   const { toast } = useToast();
 
   const handleImageUpload = async (file: File) => {
@@ -101,15 +103,24 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
     }
   };
 
+  const handleEditorChange = (content: string) => {
+    setEditorContent(content);
+    onChange(content);
+    setHtmlContent(content);
+  };
+
   const toggleHtmlMode = () => {
     if (!isHtmlMode) {
-      // Switching to HTML mode
+      // Switching to HTML mode - get current content from editor
       const quill = quillRef.current?.getEditor();
       if (quill) {
-        setHtmlContent(quill.root.innerHTML);
+        const currentHtml = quill.root.innerHTML;
+        setHtmlContent(currentHtml);
+        setEditorContent(currentHtml);
       }
     } else {
       // Switching back to visual mode
+      setEditorContent(htmlContent);
       onChange(htmlContent);
     }
     setIsHtmlMode(!isHtmlMode);
@@ -117,6 +128,7 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
 
   const handleHtmlChange = (html: string) => {
     setHtmlContent(html);
+    setEditorContent(html);
     onChange(html);
   };
 
@@ -147,7 +159,7 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
     }
   }), []);
 
-  // Set up image handler after Quill mounts
+  // Set up image handler and resize listener after Quill mounts
   useEffect(() => {
     const quill = quillRef.current?.getEditor();
     if (quill) {
@@ -157,8 +169,22 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
         setImageUrl('');
         setIsImageDialogOpen(true);
       });
+
+      // Listen for text-change event to capture resize changes
+      const handleTextChange = () => {
+        const html = quill.root.innerHTML;
+        setEditorContent(html);
+        setHtmlContent(html);
+        onChange(html);
+      };
+
+      quill.on('text-change', handleTextChange);
+
+      return () => {
+        quill.off('text-change', handleTextChange);
+      };
     }
-  }, []);
+  }, [onChange]);
 
   const formats = [
     'header', 'font', 'size',
@@ -203,8 +229,8 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
           <ReactQuill
             ref={quillRef}
             theme="snow"
-            value={initialContent}
-            onChange={onChange}
+            value={editorContent}
+            onChange={handleEditorChange}
             modules={modules}
             formats={formats}
             placeholder="Blog içeriğinizi buraya yazın..."
