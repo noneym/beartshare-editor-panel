@@ -1,13 +1,6 @@
 import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import ReactQuill, { Quill } from 'react-quill';
-// @ts-ignore - no type definitions available
-import ImageResize from 'quill-image-resize-module-react';
 import { Button } from '@/components/ui/button';
-
-// Register image resize module only once
-if (!Quill.imports['modules/imageResize']) {
-  Quill.register('modules/imageResize', ImageResize);
-}
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,7 +28,6 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
   const [isUploading, setIsUploading] = useState(false);
   const [isHtmlMode, setIsHtmlMode] = useState(false);
   const [htmlContent, setHtmlContent] = useState(initialContent);
-  const [editorContent, setEditorContent] = useState(initialContent);
   const { toast } = useToast();
 
   const handleImageUpload = async (file: File) => {
@@ -105,24 +97,15 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
     }
   };
 
-  const handleEditorChange = (content: string) => {
-    setEditorContent(content);
-    onChange(content);
-    setHtmlContent(content);
-  };
-
   const toggleHtmlMode = () => {
     if (!isHtmlMode) {
-      // Switching to HTML mode - get current content from editor
+      // Switching to HTML mode
       const quill = quillRef.current?.getEditor();
       if (quill) {
-        const currentHtml = quill.root.innerHTML;
-        setHtmlContent(currentHtml);
-        setEditorContent(currentHtml);
+        setHtmlContent(quill.root.innerHTML);
       }
     } else {
       // Switching back to visual mode
-      setEditorContent(htmlContent);
       onChange(htmlContent);
     }
     setIsHtmlMode(!isHtmlMode);
@@ -130,7 +113,6 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
 
   const handleHtmlChange = (html: string) => {
     setHtmlContent(html);
-    setEditorContent(html);
     onChange(html);
   };
 
@@ -152,43 +134,23 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
       ],
       handlers: {}
     },
-    imageResize: {
-      parchment: Quill.import('parchment'),
-      modules: ['Resize', 'DisplaySize', 'Toolbar']
-    },
     clipboard: {
       matchVisual: false,
     }
   }), []);
 
-  // Set up image handler and resize listener after Quill mounts
+  // Set up image handler after Quill mounts
   useEffect(() => {
     const quill = quillRef.current?.getEditor();
-    if (!quill) return;
-
-    const toolbar = quill.getModule('toolbar');
-    toolbar.addHandler('image', () => {
-      console.log('[QuillBlogEditor] Image handler called');
-      setImageUrl('');
-      setIsImageDialogOpen(true);
-    });
-
-    // Listen for text-change event to capture resize changes
-    const handleTextChange = () => {
-      const html = quill.root.innerHTML;
-      console.log('[QuillBlogEditor] Text changed, updating content');
-      setEditorContent(html);
-      setHtmlContent(html);
-      onChange(html);
-    };
-
-    quill.on('text-change', handleTextChange);
-
-    return () => {
-      quill.off('text-change', handleTextChange);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount
+    if (quill) {
+      const toolbar = quill.getModule('toolbar');
+      toolbar.addHandler('image', () => {
+        console.log('[QuillBlogEditor] Image handler called via useEffect');
+        setImageUrl('');
+        setIsImageDialogOpen(true);
+      });
+    }
+  }, []);
 
   const formats = [
     'header', 'font', 'size',
@@ -233,8 +195,8 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
           <ReactQuill
             ref={quillRef}
             theme="snow"
-            value={editorContent}
-            onChange={handleEditorChange}
+            value={initialContent}
+            onChange={onChange}
             modules={modules}
             formats={formats}
             placeholder="Blog içeriğinizi buraya yazın..."

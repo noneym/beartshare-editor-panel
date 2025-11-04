@@ -6,21 +6,6 @@ Beartshare Admin Panel is a full-stack administrative dashboard built with React
 
 The platform is designed as an information-dense Material Design admin interface focused on CRUD operations, data tables, forms, and bulk communication workflows.
 
-## Recent Updates (November 4, 2025)
-
-**Blog Editor Improvements:**
-- Full-width layout for better writing experience (removed max-width constraint)
-- Dual editor system with toggle buttons:
-  - **QuillJS Editor (Default)**: Standard rich text editor with image resize functionality
-  - **Advanced Editor**: Custom editor with Cloudflare Images integration
-- QuillJS features:
-  - Full formatting toolbar (headings, lists, colors, alignment)
-  - HTML source view toggle
-  - Image resize module (`quill-image-resize-module-react`) for draggable image resizing
-  - Image upload dialog with Cloudflare Images support
-- Content preserved when switching between editors
-- User can choose preferred editor per session
-
 ## Recent Updates (November 3, 2025)
 
 **Authentication System:**
@@ -182,9 +167,6 @@ email_templates
 - **Utilities:** clsx and tailwind-merge for className management
 - **Icons:** lucide-react for consistent icon system
 - **XML Parsing:** xml2js for SOAP response handling
-- **Rich Text Editing:** 
-  - react-quill for QuillJS integration
-  - quill-image-resize-module-react for image resizing in QuillJS editor
 
 **Development Tools:**
 - Replit-specific plugins for runtime error overlay and dev banner
