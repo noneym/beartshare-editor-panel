@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AdvancedBlogEditor } from "@/components/advanced-blog-editor";
+import { QuillBlogEditor } from "@/components/quill-blog-editor";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { BlogCategory, BlogPost } from "@shared/schema";
@@ -276,8 +277,11 @@ export default function BlogEditorPage() {
         </div>
 
         <div>
-          <Label className="text-sm font-medium mb-2 block">İçerik</Label>
-          <AdvancedBlogEditor
+          <Label className="text-sm font-medium mb-3 block">
+            İçerik
+            <span className="text-xs text-muted-foreground ml-2">(QuillJS Editor ile test ediliyor)</span>
+          </Label>
+          <QuillBlogEditor
             initialContent={content}
             onChange={setContent}
           />
