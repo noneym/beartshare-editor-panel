@@ -4,8 +4,10 @@ import ReactQuill, { Quill } from 'react-quill';
 import ImageResize from 'quill-image-resize-module-react';
 import { Button } from '@/components/ui/button';
 
-// Register image resize module
-Quill.register('modules/imageResize', ImageResize);
+// Register image resize module only once
+if (!Quill.imports['modules/imageResize']) {
+  Quill.register('modules/imageResize', ImageResize);
+}
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -162,29 +164,31 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
   // Set up image handler and resize listener after Quill mounts
   useEffect(() => {
     const quill = quillRef.current?.getEditor();
-    if (quill) {
-      const toolbar = quill.getModule('toolbar');
-      toolbar.addHandler('image', () => {
-        console.log('[QuillBlogEditor] Image handler called via useEffect');
-        setImageUrl('');
-        setIsImageDialogOpen(true);
-      });
+    if (!quill) return;
 
-      // Listen for text-change event to capture resize changes
-      const handleTextChange = () => {
-        const html = quill.root.innerHTML;
-        setEditorContent(html);
-        setHtmlContent(html);
-        onChange(html);
-      };
+    const toolbar = quill.getModule('toolbar');
+    toolbar.addHandler('image', () => {
+      console.log('[QuillBlogEditor] Image handler called');
+      setImageUrl('');
+      setIsImageDialogOpen(true);
+    });
 
-      quill.on('text-change', handleTextChange);
+    // Listen for text-change event to capture resize changes
+    const handleTextChange = () => {
+      const html = quill.root.innerHTML;
+      console.log('[QuillBlogEditor] Text changed, updating content');
+      setEditorContent(html);
+      setHtmlContent(html);
+      onChange(html);
+    };
 
-      return () => {
-        quill.off('text-change', handleTextChange);
-      };
-    }
-  }, [onChange]);
+    quill.on('text-change', handleTextChange);
+
+    return () => {
+      quill.off('text-change', handleTextChange);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   const formats = [
     'header', 'font', 'size',
