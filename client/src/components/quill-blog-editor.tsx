@@ -2,9 +2,6 @@ import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import ReactQuill, { Quill } from 'react-quill';
 import ImageResize from 'quill-image-resize-module-react';
 import { Button } from '@/components/ui/button';
-
-// Register image resize module
-Quill.register('modules/imageResize', ImageResize);
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,6 +15,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+
+// Register image resize module (only once, outside component)
+Quill.register('modules/imageResize', ImageResize);
 
 interface QuillBlogEditorProps {
   initialContent: string;
@@ -103,14 +103,19 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
 
   const toggleHtmlMode = () => {
     if (!isHtmlMode) {
-      // Switching to HTML mode
+      // Switching to HTML mode - get current content from Quill
       const quill = quillRef.current?.getEditor();
       if (quill) {
         setHtmlContent(quill.root.innerHTML);
       }
     } else {
-      // Switching back to visual mode
-      onChange(htmlContent);
+      // Switching back to visual mode - restore HTML content to Quill
+      const quill = quillRef.current?.getEditor();
+      if (quill) {
+        // Use clipboard.dangerouslyPasteHTML to properly set HTML with inline styles
+        quill.clipboard.dangerouslyPasteHTML(htmlContent);
+        onChange(htmlContent); // Notify parent
+      }
     }
     setIsHtmlMode(!isHtmlMode);
   };
@@ -153,9 +158,13 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
     if (quill) {
       const toolbar = quill.getModule('toolbar');
       toolbar.addHandler('image', () => {
-        console.log('[QuillBlogEditor] Image handler called via useEffect');
-        setImageUrl('');
-        setIsImageDialogOpen(true);
+        console.log('[QuillBlogEditor] Image handler called');
+        // Use simple prompt for now (reliable cross-browser solution)
+        const url = prompt('Resim URL\'sini girin:');
+        if (url) {
+          const range = quill.getSelection();
+          quill.insertEmbed(range?.index || 0, 'image', url);
+        }
       });
     }
   }, []);
