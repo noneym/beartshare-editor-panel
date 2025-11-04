@@ -1,6 +1,10 @@
 import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import ReactQuill, { Quill } from 'react-quill';
+import ImageResize from 'quill-image-resize-module-react';
 import { Button } from '@/components/ui/button';
+
+// Register image resize module
+Quill.register('modules/imageResize', ImageResize);
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -133,6 +137,10 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
         ['clean']
       ],
       handlers: {}
+    },
+    imageResize: {
+      parchment: Quill.import('parchment'),
+      modules: ['Resize', 'DisplaySize', 'Toolbar']
     },
     clipboard: {
       matchVisual: false,
