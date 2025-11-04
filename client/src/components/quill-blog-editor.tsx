@@ -87,6 +87,12 @@ export function QuillBlogEditor({ initialContent, onChange }: QuillBlogEditorPro
   const [content, setContent] = useState(initialContent);
   const { toast } = useToast();
 
+  // Update content when initialContent prop changes (e.g., when loading from API)
+  useEffect(() => {
+    setContent(initialContent);
+    setHtmlContent(initialContent);
+  }, [initialContent]);
+
   const handleImageUpload = async (file: File) => {
     setIsUploading(true);
     try {
