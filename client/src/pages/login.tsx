@@ -3,9 +3,10 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import logoImage from "@assets/generated_images/Be_Art_Share_full_logo_1a8d6dcb.png";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -56,8 +57,15 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Beartshare Admin</CardTitle>
+        <CardHeader className="space-y-4">
+          <div className="flex justify-center">
+            <img 
+              src={logoImage} 
+              alt="Beartshare Logo" 
+              className="h-16 w-auto object-contain"
+              data-testid="login-logo"
+            />
+          </div>
           <CardDescription className="text-center">
             Yönetim paneline giriş yapmak için bilgilerinizi girin
           </CardDescription>
