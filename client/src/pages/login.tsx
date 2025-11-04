@@ -56,15 +56,8 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4">
-          <div className="flex justify-center">
-            <img 
-              src="/beartshare-logo.svg" 
-              alt="Beartshare" 
-              className="h-12 w-auto"
-              data-testid="login-logo"
-            />
-          </div>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Beartshare Admin</CardTitle>
           <CardDescription className="text-center">
             Yönetim paneline giriş yapmak için bilgilerinizi girin
           </CardDescription>
