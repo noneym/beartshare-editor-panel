@@ -176,7 +176,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const user = await storage.getUser(userId);
         if (user && user.mobile) {
           try {
-            await sendSMS(user.mobile, smsMessage);
+            // Get updated points summary to show total in SMS
+            const summary = await storage.getUserPointsSummary(userId);
+            
+            // Replace template tags in SMS message
+            let finalMessage = smsMessage
+              .replace(/\[PUAN\]/g, points.toString())
+              .replace(/\[TOPLAM\]/g, summary.total.toString());
+            
+            // Send SMS using the correct format
+            await sendSMS({
+              message: finalMessage,
+              recipients: [cleanPhoneNumber(user.mobile)]
+            });
           } catch (smsError) {
             console.error("SMS sending failed:", smsError);
             // Don't fail the request if SMS fails
