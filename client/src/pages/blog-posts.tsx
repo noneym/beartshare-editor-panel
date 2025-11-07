@@ -51,7 +51,8 @@ export default function BlogPosts() {
     content: post.content, // Full HTML content for preview
     category: getCategoryName(post.category),
     date: post.created_at ? new Date(post.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '',
-    status: (post.status === "1" ? 'published' : 'draft') as 'published' | 'draft',
+    // Database returns status as number (0 or 1), but schema defines it as string
+    status: ((post.status as any) === 1 || post.status === "1" ? 'published' : 'draft') as 'published' | 'draft',
   }));
 
   const filteredPosts = formattedPosts.filter(
