@@ -92,6 +92,7 @@ export default function Users() {
           users={filteredUsers}
           onSendEmail={(ids) => setLocation(`/send-email?users=${ids.join(',')}`)}
           onSendSMS={(ids) => setLocation(`/send-sms?users=${ids.join(',')}`)}
+          onViewUser={(id) => setLocation(`/users/${id}`)}
         />
       )}
     </div>

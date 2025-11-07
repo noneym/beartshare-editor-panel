@@ -30,9 +30,10 @@ interface UsersTableProps {
   users: FormattedUser[];
   onSendEmail?: (userIds: string[]) => void;
   onSendSMS?: (userIds: string[]) => void;
+  onViewUser?: (userId: string) => void;
 }
 
-export function UsersTable({ users, onSendEmail, onSendSMS }: UsersTableProps) {
+export function UsersTable({ users, onSendEmail, onSendSMS, onViewUser }: UsersTableProps) {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
 
   const toggleUser = (userId: string) => {
@@ -112,8 +113,13 @@ export function UsersTable({ users, onSendEmail, onSendSMS }: UsersTableProps) {
           </TableHeader>
           <TableBody>
             {users.map((user) => (
-              <TableRow key={user.id} data-testid={`row-user-${user.id}`}>
-                <TableCell>
+              <TableRow 
+                key={user.id} 
+                data-testid={`row-user-${user.id}`}
+                className="cursor-pointer hover-elevate"
+                onClick={() => onViewUser?.(user.id)}
+              >
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={selectedUsers.has(user.id)}
                     onCheckedChange={() => toggleUser(user.id)}
@@ -142,7 +148,7 @@ export function UsersTable({ users, onSendEmail, onSendSMS }: UsersTableProps) {
                     {user.status === "active" ? "Aktif" : "Pasif"}
                   </span>
                 </TableCell>
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="w-8 h-8" data-testid={`button-actions-${user.id}`}>

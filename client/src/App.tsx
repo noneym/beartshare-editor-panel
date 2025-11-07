@@ -12,6 +12,7 @@ import { LogOut } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Users from "@/pages/users";
+import UserDetail from "@/pages/user-detail";
 import SendEmail from "@/pages/send-email";
 import SendSMS from "@/pages/send-sms";
 import BlogPosts from "@/pages/blog-posts";
@@ -78,6 +79,7 @@ function AppContent() {
             <Switch>
               <Route path="/" component={Dashboard} />
               <Route path="/users" component={Users} />
+              <Route path="/users/:id" component={UserDetail} />
               <Route path="/send-email" component={SendEmail} />
               <Route path="/send-sms" component={SendSMS} />
               <Route path="/email-templates" component={EmailTemplates} />
