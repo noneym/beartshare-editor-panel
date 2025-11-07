@@ -67,7 +67,6 @@ export const refPointCashOut = mysqlTable("ref_point_cash_out", {
   id: int("id").primaryKey().autoincrement(),
   user_id: int("user_id").notNull(),
   points: int("points").notNull(), // Harcanan puan miktarı
-  note: text("note"),
   status: varchar("status", { length: 50 }),
   created_at: varchar("created_at", { length: 50 }), // Database stores as varchar datetime
   updated_at: varchar("updated_at", { length: 50 }), // Database stores as varchar datetime

@@ -164,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         note: note || null,
         ref_user_id: null,
         order_id: null,
-        status: "active",
+        status: "1", // Database expects string "1" for active status
         created_at: formatMySQLDateTime(),
         updated_at: formatMySQLDateTime(),
       });

@@ -171,8 +171,8 @@ export default function UserDetail() {
                     </TableCell>
                     <TableCell>{point.note || "—"}</TableCell>
                     <TableCell>
-                      <Badge variant={point.status === "active" ? "default" : "secondary"}>
-                        {point.status || "active"}
+                      <Badge variant={point.status === "1" ? "default" : "secondary"}>
+                        {point.status === "1" ? "Aktif" : "Pasif"}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -196,7 +196,6 @@ export default function UserDetail() {
                 <TableRow>
                   <TableHead>Tarih</TableHead>
                   <TableHead>Puan</TableHead>
-                  <TableHead>Not</TableHead>
                   <TableHead>Durum</TableHead>
                 </TableRow>
               </TableHeader>
@@ -209,10 +208,9 @@ export default function UserDetail() {
                         -{cashOut.points}
                       </Badge>
                     </TableCell>
-                    <TableCell>{cashOut.note || "—"}</TableCell>
                     <TableCell>
-                      <Badge variant={cashOut.status === "active" ? "default" : "secondary"}>
-                        {cashOut.status || "active"}
+                      <Badge variant={cashOut.status === "1" ? "default" : "secondary"}>
+                        {cashOut.status === "1" ? "Aktif" : "Pasif"}
                       </Badge>
                     </TableCell>
                   </TableRow>
