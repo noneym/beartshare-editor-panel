@@ -51,6 +51,28 @@ export const emailTemplates = mysqlTable("email_templates", {
   updated_at: varchar("updated_at", { length: 50 }), // Database stores as varchar datetime
 });
 
+export const points = mysqlTable("points", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: int("user_id").notNull(),
+  points: int("points").notNull(),
+  ref_user_id: int("ref_user_id"),
+  order_id: int("order_id"),
+  note: text("note"),
+  status: varchar("status", { length: 50 }),
+  created_at: varchar("created_at", { length: 50 }), // Database stores as varchar datetime
+  updated_at: varchar("updated_at", { length: 50 }), // Database stores as varchar datetime
+});
+
+export const refPointCashOut = mysqlTable("ref_point_cash_out", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: int("user_id").notNull(),
+  points: int("points").notNull(), // Harcanan puan miktarı
+  note: text("note"),
+  status: varchar("status", { length: 50 }),
+  created_at: varchar("created_at", { length: 50 }), // Database stores as varchar datetime
+  updated_at: varchar("updated_at", { length: 50 }), // Database stores as varchar datetime
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -72,6 +94,16 @@ export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit
   // Don't omit created_at and updated_at - backend sets them explicitly
 });
 
+export const insertPointSchema = createInsertSchema(points).omit({
+  id: true,
+  // Don't omit created_at and updated_at - backend sets them explicitly
+});
+
+export const insertRefPointCashOutSchema = createInsertSchema(refPointCashOut).omit({
+  id: true,
+  // Don't omit created_at and updated_at - backend sets them explicitly
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -84,3 +116,9 @@ export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 
 export type EmailTemplate = typeof emailTemplates.$inferSelect;
 export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+
+export type Point = typeof points.$inferSelect;
+export type InsertPoint = z.infer<typeof insertPointSchema>;
+
+export type RefPointCashOut = typeof refPointCashOut.$inferSelect;
+export type InsertRefPointCashOut = z.infer<typeof insertRefPointCashOutSchema>;

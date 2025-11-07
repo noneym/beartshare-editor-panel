@@ -5,6 +5,8 @@ import {
   blogCategories,
   blogPosts,
   emailTemplates,
+  points,
+  refPointCashOut,
   type User,
   type InsertUser,
   type BlogCategory,
@@ -13,6 +15,9 @@ import {
   type InsertBlogPost,
   type EmailTemplate,
   type InsertEmailTemplate,
+  type Point,
+  type InsertPoint,
+  type RefPointCashOut,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -42,6 +47,12 @@ export interface IStorage {
   createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
   updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined>;
   deleteEmailTemplate(id: number): Promise<boolean>;
+
+  // Points
+  getUserPoints(userId: number): Promise<Point[]>;
+  getUserPointsSummary(userId: number): Promise<{ earned: number; spent: number; total: number }>;
+  getUserCashOuts(userId: number): Promise<RefPointCashOut[]>;
+  createPoint(point: InsertPoint): Promise<Point>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -148,6 +159,44 @@ export class DatabaseStorage implements IStorage {
   async deleteEmailTemplate(id: number): Promise<boolean> {
     await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
     return true;
+  }
+
+  // Points
+  async getUserPoints(userId: number): Promise<Point[]> {
+    return await db.select().from(points).where(eq(points.user_id, userId)).orderBy(desc(points.created_at));
+  }
+
+  async getUserPointsSummary(userId: number): Promise<{ earned: number; spent: number; total: number }> {
+    // Get total earned points
+    const earnedResult = await db
+      .select({ total: sql<number>`COALESCE(SUM(${points.points}), 0)` })
+      .from(points)
+      .where(eq(points.user_id, userId));
+    const earned = Number(earnedResult[0]?.total || 0);
+
+    // Get total spent points
+    const spentResult = await db
+      .select({ total: sql<number>`COALESCE(SUM(${refPointCashOut.points}), 0)` })
+      .from(refPointCashOut)
+      .where(eq(refPointCashOut.user_id, userId));
+    const spent = Number(spentResult[0]?.total || 0);
+
+    return {
+      earned,
+      spent,
+      total: earned - spent
+    };
+  }
+
+  async getUserCashOuts(userId: number): Promise<RefPointCashOut[]> {
+    return await db.select().from(refPointCashOut).where(eq(refPointCashOut.user_id, userId)).orderBy(desc(refPointCashOut.created_at));
+  }
+
+  async createPoint(point: InsertPoint): Promise<Point> {
+    const result = await db.insert(points).values(point);
+    const id = Number(result[0].insertId);
+    const results = await db.select().from(points).where(eq(points.id, id)).limit(1);
+    return results[0]!;
   }
 }
 
