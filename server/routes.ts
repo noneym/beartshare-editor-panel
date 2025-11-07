@@ -10,6 +10,7 @@ import {
   insertBlogCategorySchema,
   insertBlogPostSchema,
   insertEmailTemplateSchema,
+  insertPointSchema,
 } from "@shared/schema";
 
 // Configure multer for file uploads
@@ -110,6 +111,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ error: "Failed to fetch user" });
+    }
+  });
+
+  // User Points API
+  app.get("/api/users/:id/points", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const userPoints = await storage.getUserPoints(userId);
+      res.json(userPoints);
+    } catch (error) {
+      console.error("Error fetching user points:", error);
+      res.status(500).json({ error: "Failed to fetch user points" });
+    }
+  });
+
+  app.get("/api/users/:id/points-summary", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const summary = await storage.getUserPointsSummary(userId);
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching points summary:", error);
+      res.status(500).json({ error: "Failed to fetch points summary" });
+    }
+  });
+
+  app.get("/api/users/:id/cash-outs", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const cashOuts = await storage.getUserCashOuts(userId);
+      res.json(cashOuts);
+    } catch (error) {
+      console.error("Error fetching cash outs:", error);
+      res.status(500).json({ error: "Failed to fetch cash outs" });
+    }
+  });
+
+  app.post("/api/users/:id/points", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { points, note, sendSms, smsMessage } = req.body;
+
+      if (!points || isNaN(points)) {
+        return res.status(400).json({ error: "Valid points value required" });
+      }
+
+      // Create point entry
+      const pointData = insertPointSchema.parse({
+        user_id: userId,
+        points: parseInt(points),
+        note: note || null,
+        ref_user_id: null,
+        order_id: null,
+        status: "active",
+        created_at: formatMySQLDateTime(),
+        updated_at: formatMySQLDateTime(),
+      });
+
+      const createdPoint = await storage.createPoint(pointData);
+
+      // Send SMS if requested
+      if (sendSms && smsMessage) {
+        const user = await storage.getUser(userId);
+        if (user && user.mobile) {
+          try {
+            await sendSMS(user.mobile, smsMessage);
+          } catch (smsError) {
+            console.error("SMS sending failed:", smsError);
+            // Don't fail the request if SMS fails
+          }
+        }
+      }
+
+      res.json({ success: true, point: createdPoint });
+    } catch (error) {
+      console.error("Error creating point:", error);
+      res.status(400).json({ error: "Failed to create point" });
     }
   });
 
